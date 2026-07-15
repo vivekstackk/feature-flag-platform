@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "cross-env NODE_ENV=test jest"
   },
   "keywords": [],
   "author": "",
@@ -13,9 +13,13 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^26.1.1",
+    "cross-env": "^10.1.0",
     "jest": "^30.4.2",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "fastify": "^5.10.0"
   }
 }
