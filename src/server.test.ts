@@ -99,4 +99,71 @@ describe('Flag API', () => {
 
     expect(response.statusCode).toBe(404);
   });
+
+  it('sets targeting rules and applies them on evaluate', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'plan-gate', defaultValue: false },
+    });
+    const { id, key } = JSON.parse(created.body);
+
+    await app.inject({ method: 'PATCH', url: `/flags/${id}`, payload: { enabled: true } });
+
+    await app.inject({
+      method: 'PUT',
+      url: `/flags/${id}/rules`,
+      payload: {
+        rules: [{ attribute: 'plan', operator: 'equals', value: 'pro', serveValue: true }],
+      },
+    });
+
+    const proResponse = await app.inject({
+      method: 'POST',
+      url: `/evaluate/${key}`,
+      payload: { userId: 'u1', attributes: { plan: 'pro' } },
+    });
+    const freeResponse = await app.inject({
+      method: 'POST',
+      url: `/evaluate/${key}`,
+      payload: { userId: 'u2', attributes: { plan: 'free' } },
+    });
+
+    expect(JSON.parse(proResponse.body).value).toBe(true);
+    expect(JSON.parse(freeResponse.body).value).toBe(false);
+  });
+
+  it('sets a rollout and applies it on evaluate', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'full-rollout', defaultValue: false },
+    });
+    const { id, key } = JSON.parse(created.body);
+
+    await app.inject({ method: 'PATCH', url: `/flags/${id}`, payload: { enabled: true } });
+
+    await app.inject({
+      method: 'PUT',
+      url: `/flags/${id}/rollout`,
+      payload: { rollout: { percentage: 100, serveValue: true } },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/evaluate/${key}`,
+      payload: { userId: 'any-user' },
+    });
+
+    expect(JSON.parse(response.body).value).toBe(true);
+  });
+
+  it('returns 404 when setting rules on a non-existent flag', async () => {
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/flags/fake-id/rules',
+      payload: { rules: [] },
+    });
+    expect(response.statusCode).toBe(404);
+  });
 });

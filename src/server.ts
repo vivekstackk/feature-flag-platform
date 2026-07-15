@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import { FlagStore } from './store';
-import { CreateFlagInput, FlagConfig, UserContext } from './types';
+import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig } from './types';
 import { evaluateFlag } from './evaluation';
 
 export function buildServer() {
@@ -54,9 +54,26 @@ export function buildServer() {
       return reply.code(404).send({ error: 'Flag not found' });
     }
 
-    const flagConfig: FlagConfig = { ...flag, rules: [], rollout: null };
-    const value = evaluateFlag(flagConfig, request.body);
+    const value = evaluateFlag(flag, request.body);
     return { key: flag.key, value };
+  });
+
+  app.put<{ Params: { id: string }; Body: { rules: TargetingRule[] } }>('/flags/:id/rules', async (request, reply) => {
+    try {
+      const flag = store.setRules(request.params.id, request.body.rules);
+      return flag;
+    } catch (err) {
+      reply.code(404).send({ error: (err as Error).message });
+    }
+  });
+
+  app.put<{ Params: { id: string }; Body: { rollout: RolloutConfig | null } }>('/flags/:id/rollout', async (request, reply) => {
+    try {
+      const flag = store.setRollout(request.params.id, request.body.rollout);
+      return flag;
+    } catch (err) {
+      reply.code(404).send({ error: (err as Error).message });
+    }
   });
 
   return app;
