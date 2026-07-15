@@ -71,4 +71,32 @@ describe('Flag API', () => {
     const getResponse = await app.inject({ method: 'GET', url: `/flags/${id}` });
     expect(getResponse.statusCode).toBe(404);
   });
+
+  it('evaluates a disabled flag to its default value', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'eval-test', defaultValue: false },
+    });
+    const { key } = JSON.parse(created.body);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/evaluate/${key}`,
+      payload: { userId: 'u1' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body).value).toBe(false);
+  });
+
+  it('returns 404 when evaluating a non-existent flag key', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/evaluate/does-not-exist',
+      payload: { userId: 'u1' },
+    });
+
+    expect(response.statusCode).toBe(404);
+  });
 });

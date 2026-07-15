@@ -13,3 +13,26 @@ export interface CreateFlagInput {
   description?: string;
   defaultValue?: boolean;
 }
+export interface UserContext {
+  userId: string;
+  attributes?: Record<string, string | number | boolean>;
+}
+
+export type RuleOperator = 'equals' | 'notEquals' | 'in' | 'contains';
+
+export interface TargetingRule {
+  attribute: string;
+  operator: RuleOperator;
+  value: string | number | boolean | (string | number)[];
+  serveValue: boolean;
+}
+
+export interface RolloutConfig {
+  percentage: number;
+  serveValue: boolean;
+}
+
+export interface FlagConfig extends Flag {
+  rules: TargetingRule[];
+  rollout: RolloutConfig | null;
+}

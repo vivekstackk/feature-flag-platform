@@ -1,9 +1,10 @@
 import Fastify from 'fastify';
 import { FlagStore } from './store';
-import { CreateFlagInput } from './types';
+import { CreateFlagInput, FlagConfig, UserContext } from './types';
+import { evaluateFlag } from './evaluation';
 
 export function buildServer() {
- const app = Fastify({ logger: process.env.NODE_ENV !== 'test' });
+  const app = Fastify({ logger: process.env.NODE_ENV !== 'test' });
   const store = new FlagStore();
 
   app.post<{ Body: CreateFlagInput }>('/flags', async (request, reply) => {
@@ -45,6 +46,17 @@ export function buildServer() {
       return reply.code(404).send({ error: 'Flag not found' });
     }
     reply.code(204).send();
+  });
+
+  app.post<{ Params: { key: string }; Body: UserContext }>('/evaluate/:key', async (request, reply) => {
+    const flag = store.getByKey(request.params.key);
+    if (!flag) {
+      return reply.code(404).send({ error: 'Flag not found' });
+    }
+
+    const flagConfig: FlagConfig = { ...flag, rules: [], rollout: null };
+    const value = evaluateFlag(flagConfig, request.body);
+    return { key: flag.key, value };
   });
 
   return app;
