@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { PgFlagStore } from './pgFlagStore';
-import { CachedFlagStore } from './cachedFlagStore';
+import { CachedFlagStore, FLAG_CHANGE_CHANNEL } from './cachedFlagStore';
 import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig } from './types';
 import { evaluateFlag } from './evaluation';
 
@@ -91,6 +91,26 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     } catch (err) {
       reply.code(404).send({ error: (err as Error).message });
     }
+  });
+
+  app.get('/stream', (request, reply) => {
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+
+    const subscriber = redis.duplicate();
+    subscriber.subscribe(FLAG_CHANGE_CHANNEL);
+
+    subscriber.on('message', (_channel, message) => {
+      reply.raw.write(`data: ${message}\n\n`);
+    });
+
+    request.raw.on('close', () => {
+      subscriber.unsubscribe();
+      subscriber.quit();
+    });
   });
 
   return app;
