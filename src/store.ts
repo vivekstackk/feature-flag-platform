@@ -1,11 +1,11 @@
 import { randomUUID } from 'crypto';
-import { CreateFlagInput, FlagConfig, RolloutConfig, TargetingRule } from './types';
+import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from './types';
 
-export class FlagStore {
+export class FlagStore implements FlagRepository {
   private flags: Map<string, FlagConfig> = new Map();
 
-  create(input: CreateFlagInput): FlagConfig {
-    const existing = this.getByKey(input.key);
+  async create(input: CreateFlagInput): Promise<FlagConfig> {
+    const existing = await this.getByKey(input.key);
     if (existing) {
       throw new Error(`Flag with key "${input.key}" already exists`);
     }
@@ -27,41 +27,36 @@ export class FlagStore {
     return flag;
   }
 
-  getById(id: string): FlagConfig | undefined {
+  async getById(id: string): Promise<FlagConfig | undefined> {
     return this.flags.get(id);
   }
 
-  getByKey(key: string): FlagConfig | undefined {
+  async getByKey(key: string): Promise<FlagConfig | undefined> {
     for (const flag of this.flags.values()) {
       if (flag.key === key) return flag;
     }
     return undefined;
   }
 
-  getAll(): FlagConfig[] {
+  async getAll(): Promise<FlagConfig[]> {
     return Array.from(this.flags.values());
   }
 
-  update(
+  async update(
     id: string,
     changes: Partial<Pick<FlagConfig, 'description' | 'enabled' | 'defaultValue'>>
-  ): FlagConfig {
+  ): Promise<FlagConfig> {
     const flag = this.flags.get(id);
     if (!flag) {
       throw new Error(`Flag with id "${id}" not found`);
     }
 
-    const updated: FlagConfig = {
-      ...flag,
-      ...changes,
-      updatedAt: new Date().toISOString(),
-    };
-
+    const updated: FlagConfig = { ...flag, ...changes, updatedAt: new Date().toISOString() };
     this.flags.set(id, updated);
     return updated;
   }
 
-  setRules(id: string, rules: TargetingRule[]): FlagConfig {
+  async setRules(id: string, rules: TargetingRule[]): Promise<FlagConfig> {
     const flag = this.flags.get(id);
     if (!flag) {
       throw new Error(`Flag with id "${id}" not found`);
@@ -72,7 +67,7 @@ export class FlagStore {
     return updated;
   }
 
-  setRollout(id: string, rollout: RolloutConfig | null): FlagConfig {
+  async setRollout(id: string, rollout: RolloutConfig | null): Promise<FlagConfig> {
     const flag = this.flags.get(id);
     if (!flag) {
       throw new Error(`Flag with id "${id}" not found`);
@@ -83,7 +78,7 @@ export class FlagStore {
     return updated;
   }
 
-  delete(id: string): boolean {
+  async delete(id: string): Promise<boolean> {
     return this.flags.delete(id);
   }
 }
