@@ -1,17 +1,21 @@
 import { buildServer } from './server';
 import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
+import Redis from 'ioredis';
 
 const pool = new Pool({
   connectionString: 'postgresql://ffp:ffp_dev_password@localhost:5432/feature_flags',
 });
+
+const redis = new Redis({ host: 'localhost', port: 6379 });
 
 describe('Flag API', () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {
     await pool.query('DELETE FROM flags');
-    app = buildServer(pool);
+    await redis.flushall();
+    app = buildServer(pool, redis);
   });
 
   afterEach(async () => {
@@ -20,6 +24,7 @@ describe('Flag API', () => {
 
   afterAll(async () => {
     await pool.end();
+    await redis.quit();
   });
 
   it('creates a flag via POST /flags', async () => {

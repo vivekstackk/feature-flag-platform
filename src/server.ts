@@ -1,10 +1,12 @@
 import Fastify from 'fastify';
 import { Pool } from 'pg';
+import Redis from 'ioredis';
 import { PgFlagStore } from './pgFlagStore';
+import { CachedFlagStore } from './cachedFlagStore';
 import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig } from './types';
 import { evaluateFlag } from './evaluation';
 
-export function buildServer(pool?: Pool) {
+export function buildServer(pool?: Pool, redisClient?: Redis) {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' });
 
   const dbPool =
@@ -13,7 +15,14 @@ export function buildServer(pool?: Pool) {
       connectionString:
         process.env.DATABASE_URL ?? 'postgresql://ffp:ffp_dev_password@localhost:5432/feature_flags',
     });
-  const store = new PgFlagStore(dbPool);
+  const redis = redisClient ?? new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+  const store = new CachedFlagStore(new PgFlagStore(dbPool), redis);
+
+  if (!redisClient) {
+    app.addHook('onClose', async () => {
+      await redis.quit();
+    });
+  }
 
   app.post<{ Body: CreateFlagInput }>('/flags', async (request, reply) => {
     try {
