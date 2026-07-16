@@ -1,15 +1,25 @@
 import { buildServer } from './server';
 import { FastifyInstance } from 'fastify';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: 'postgresql://ffp:ffp_dev_password@localhost:5432/feature_flags',
+});
 
 describe('Flag API', () => {
   let app: FastifyInstance;
 
-  beforeEach(() => {
-    app = buildServer();
+  beforeEach(async () => {
+    await pool.query('DELETE FROM flags');
+    app = buildServer(pool);
   });
 
   afterEach(async () => {
     await app.close();
+  });
+
+  afterAll(async () => {
+    await pool.end();
   });
 
   it('creates a flag via POST /flags', async () => {

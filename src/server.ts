@@ -1,11 +1,19 @@
 import Fastify from 'fastify';
-import { FlagStore } from './store';
+import { Pool } from 'pg';
+import { PgFlagStore } from './pgFlagStore';
 import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig } from './types';
 import { evaluateFlag } from './evaluation';
 
-export function buildServer() {
+export function buildServer(pool?: Pool) {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' });
-  const store = new FlagStore();
+
+  const dbPool =
+    pool ??
+    new Pool({
+      connectionString:
+        process.env.DATABASE_URL ?? 'postgresql://ffp:ffp_dev_password@localhost:5432/feature_flags',
+    });
+  const store = new PgFlagStore(dbPool);
 
   app.post<{ Body: CreateFlagInput }>('/flags', async (request, reply) => {
     try {

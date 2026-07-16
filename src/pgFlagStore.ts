@@ -48,8 +48,15 @@ export class PgFlagStore implements FlagRepository {
   }
 
   async getById(id: string): Promise<FlagConfig | undefined> {
-    const result = await this.pool.query<FlagRow>('SELECT * FROM flags WHERE id = $1', [id]);
-    return result.rows[0] ? rowToFlagConfig(result.rows[0]) : undefined;
+    try {
+      const result = await this.pool.query<FlagRow>('SELECT * FROM flags WHERE id = $1', [id]);
+      return result.rows[0] ? rowToFlagConfig(result.rows[0]) : undefined;
+    } catch (err) {
+      if ((err as { code?: string }).code === '22P02') {
+        return undefined;
+      }
+      throw err;
+    }
   }
 
   async getByKey(key: string): Promise<FlagConfig | undefined> {
