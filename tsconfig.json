@@ -13,5 +13,6 @@
     "declaration": true,
     "moduleDetection": "force",
     "types": ["node", "jest"]
-  }
+  },
+  "exclude": ["scripts", "node_modules", "dist"]
 }
