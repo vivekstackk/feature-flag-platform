@@ -9,6 +9,43 @@ const pool = new Pool({
 
 const redis = new Redis({ host: 'localhost', port: 6379 });
 
+describe('SSE stream', () => {
+  it(
+    'pushes a message on the stream when a flag changes',
+    async () => {
+      await pool.query('DELETE FROM flags');
+      const streamApp = buildServer(pool, redis);
+      await streamApp.ready();
+
+      const address = await streamApp.listen({ port: 0, host: '127.0.0.1' });
+      const streamResponse = await fetch(`${address}/stream`);
+      const reader = streamResponse.body!.getReader();
+
+      const streamPromise = (async () => {
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (!buffer.includes('data:')) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+        }
+        return buffer;
+      })();
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      await streamApp.inject({ method: 'POST', url: '/flags', payload: { key: 'stream-test-flag' } });
+
+      const chunk = await streamPromise;
+      expect(chunk).toContain('stream-test-flag');
+
+      reader.cancel();
+      await streamApp.close();
+    },
+    10000
+  );
+});
+
 describe('Flag API', () => {
   let app: FastifyInstance;
 
