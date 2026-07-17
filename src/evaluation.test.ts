@@ -60,6 +60,65 @@ describe('evaluateFlag', () => {
     const flag = baseFlag({ rollout: { percentage: 100, serveValue: true } });
     expect(evaluateFlag(flag, { userId: 'any-user' })).toBe(true);
   });
+
+  it('matches a user via inSegment when all segment conditions are met', () => {
+    const segments = new Map([
+      [
+        'beta-testers',
+        {
+          id: '1',
+          name: 'beta-testers',
+          conditions: [{ attribute: 'plan', operator: 'equals' as const, value: 'beta' }],
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+    ]);
+
+    const flag = baseFlag({
+      rules: [{ attribute: '', operator: 'inSegment', value: 'beta-testers', serveValue: true }],
+    });
+
+    expect(evaluateFlag(flag, { userId: 'u1', attributes: { plan: 'beta' } }, segments)).toBe(true);
+    expect(evaluateFlag(flag, { userId: 'u2', attributes: { plan: 'free' } }, segments)).toBe(false);
+  });
+
+  it('falls through when the referenced segment does not exist', () => {
+    const flag = baseFlag({
+      rules: [{ attribute: '', operator: 'inSegment', value: 'nonexistent-segment', serveValue: true }],
+    });
+
+    expect(evaluateFlag(flag, { userId: 'u1' }, new Map())).toBe(false);
+  });
+
+  it('requires all segment conditions to match (AND semantics)', () => {
+    const segments = new Map([
+      [
+        'enterprise-eu',
+        {
+          id: '1',
+          name: 'enterprise-eu',
+          conditions: [
+            { attribute: 'plan', operator: 'equals' as const, value: 'enterprise' },
+            { attribute: 'region', operator: 'equals' as const, value: 'eu' },
+          ],
+          createdAt: '',
+          updatedAt: '',
+        },
+      ],
+    ]);
+
+    const flag = baseFlag({
+      rules: [{ attribute: '', operator: 'inSegment', value: 'enterprise-eu', serveValue: true }],
+    });
+
+    expect(
+      evaluateFlag(flag, { userId: 'u1', attributes: { plan: 'enterprise', region: 'eu' } }, segments)
+    ).toBe(true);
+    expect(
+      evaluateFlag(flag, { userId: 'u2', attributes: { plan: 'enterprise', region: 'us' } }, segments)
+    ).toBe(false);
+  });
 });
 
 describe('bucketFor', () => {

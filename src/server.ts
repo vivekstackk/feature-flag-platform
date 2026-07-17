@@ -3,8 +3,9 @@ import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { PgFlagStore } from './pgFlagStore';
 import { CachedFlagStore, FLAG_CHANGE_CHANNEL } from './cachedFlagStore';
-import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig, Flag } from './types';
+import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig, Flag, CreateSegmentInput } from './types';
 import { evaluateFlag } from './evaluation';
+import { SegmentStore } from './segmentStore';
 
 type FlagPatchBody = Partial<Pick<Flag, 'description' | 'enabled' | 'defaultValue'>>;
 
@@ -24,6 +25,7 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
 
   const store = new CachedFlagStore(new PgFlagStore(dbPool), redis);
+  const segmentStore = new SegmentStore(dbPool);
 
   if (!redisClient) {
     app.addHook('onClose', async () => {
@@ -82,7 +84,10 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
         return reply.code(404).send({ error: 'Flag not found' });
       }
 
-      const value = evaluateFlag(flag, request.body);
+      const allSegments = await segmentStore.getAll();
+      const segmentMap = new Map(allSegments.map((s) => [s.name, s]));
+
+      const value = evaluateFlag(flag, request.body, segmentMap);
 
       return {
         key: flag.key,
@@ -114,6 +119,27 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
       }
     }
   );
+
+  app.post<{ Body: CreateSegmentInput }>('/segments', async (request, reply) => {
+    try {
+      const segment = await segmentStore.create(request.body);
+      reply.code(201).send(segment);
+    } catch (err) {
+      reply.code(409).send({ error: (err as Error).message });
+    }
+  });
+
+  app.get('/segments', async () => {
+    return segmentStore.getAll();
+  });
+
+  app.delete<{ Params: { id: string } }>('/segments/:id', async (request, reply) => {
+    const deleted = await segmentStore.delete(request.params.id);
+    if (!deleted) {
+      return reply.code(404).send({ error: 'Segment not found' });
+    }
+    reply.code(204).send();
+  });
 
   app.get('/stream', async (request, reply) => {
     reply.hijack();

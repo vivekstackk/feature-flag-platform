@@ -24,7 +24,7 @@ describe('SSE stream', () => {
       const streamPromise = (async () => {
         const decoder = new TextDecoder();
         let buffer = '';
-        while (!buffer.includes('data:')) {
+        while (!buffer.includes('stream-test-flag')) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += decoder.decode(value, { stream: true });

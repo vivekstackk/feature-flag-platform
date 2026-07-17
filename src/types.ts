@@ -18,7 +18,7 @@ export interface UserContext {
   attributes?: Record<string, string | number | boolean>;
 }
 
-export type RuleOperator = 'equals' | 'notEquals' | 'in' | 'contains';
+export type RuleOperator = 'equals' | 'notEquals' | 'in' | 'contains' | 'inSegment';
 
 export interface TargetingRule {
   attribute: string;
@@ -45,4 +45,23 @@ export interface FlagRepository {
   setRules(id: string, rules: TargetingRule[]): Promise<FlagConfig>;
   setRollout(id: string, rollout: RolloutConfig | null): Promise<FlagConfig>;
   delete(id: string): Promise<boolean>;
+}
+
+export interface SegmentCondition {
+  attribute: string;
+  operator: 'equals' | 'notEquals' | 'in' | 'contains';
+  value: string | number | boolean | (string | number)[];
+}
+
+export interface Segment {
+  id: string;
+  name: string;
+  conditions: SegmentCondition[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSegmentInput {
+  name: string;
+  conditions: SegmentCondition[];
 }
