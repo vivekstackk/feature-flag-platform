@@ -51,6 +51,8 @@ describe('Flag API', () => {
 
   beforeEach(async () => {
     await pool.query('DELETE FROM flags');
+    await pool.query('DELETE FROM exposures');
+    await pool.query('DELETE FROM outcomes');
     await redis.flushall();
     app = buildServer(pool, redis);
   });
@@ -217,5 +219,67 @@ describe('Flag API', () => {
       payload: { rules: [] },
     });
     expect(response.statusCode).toBe(404);
+  });
+
+  it('logs an exposure when evaluating a flag', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'exposure-test', defaultValue: true },
+    });
+    const { key } = JSON.parse(created.body);
+
+    await app.inject({
+      method: 'POST',
+      url: `/evaluate/${key}`,
+      payload: { userId: 'exposure-user' },
+    });
+
+    const statsResponse = await app.inject({
+      method: 'GET',
+      url: `/experiments/${key}/stats?event=purchase`,
+    });
+
+    const stats = JSON.parse(statsResponse.body);
+    const trueVariant = stats.variants.find((v: { variant: boolean }) => v.variant === true);
+
+    expect(trueVariant?.exposures).toBe(1);
+  });
+
+  it('logs an outcome and reflects it in stats', async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'outcome-test', defaultValue: true },
+    });
+    const { key } = JSON.parse(created.body);
+
+    await app.inject({
+      method: 'POST',
+      url: `/evaluate/${key}`,
+      payload: { userId: 'converting-user' },
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/outcomes',
+      payload: { userId: 'converting-user', eventName: 'signup' },
+    });
+
+    const statsResponse = await app.inject({
+      method: 'GET',
+      url: `/experiments/${key}/stats?event=signup`,
+    });
+
+    const stats = JSON.parse(statsResponse.body);
+    const trueVariant = stats.variants.find((v: { variant: boolean }) => v.variant === true);
+
+    expect(trueVariant?.conversions).toBe(1);
+    expect(trueVariant?.conversionRate).toBe(1);
+  });
+
+  it('returns 400 from stats endpoint when event query param is missing', async () => {
+    const response = await app.inject({ method: 'GET', url: '/experiments/some-flag/stats' });
+    expect(response.statusCode).toBe(400);
   });
 });

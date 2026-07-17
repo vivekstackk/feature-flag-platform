@@ -6,6 +6,7 @@ import { CachedFlagStore, FLAG_CHANGE_CHANNEL } from './cachedFlagStore';
 import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig, Flag, CreateSegmentInput } from './types';
 import { evaluateFlag } from './evaluation';
 import { SegmentStore } from './segmentStore';
+import { ExperimentStore } from './experimentStore';
 
 type FlagPatchBody = Partial<Pick<Flag, 'description' | 'enabled' | 'defaultValue'>>;
 
@@ -26,6 +27,7 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
 
   const store = new CachedFlagStore(new PgFlagStore(dbPool), redis);
   const segmentStore = new SegmentStore(dbPool);
+  const experimentStore = new ExperimentStore(dbPool);
 
   if (!redisClient) {
     app.addHook('onClose', async () => {
@@ -89,6 +91,12 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
 
       const value = evaluateFlag(flag, request.body, segmentMap);
 
+      await experimentStore.logExposure({
+        flagKey: flag.key,
+        userId: request.body.userId,
+        value,
+      });
+
       return {
         key: flag.key,
         value,
@@ -140,6 +148,21 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     }
     reply.code(204).send();
   });
+
+  app.post<{ Body: { userId: string; eventName: string } }>('/outcomes', async (request, reply) => {
+    await experimentStore.logOutcome(request.body);
+    reply.code(201).send({ status: 'logged' });
+  });
+
+  app.get<{ Params: { key: string }; Querystring: { event: string } }>(
+    '/experiments/:key/stats',
+    async (request, reply) => {
+      if (!request.query.event) {
+        return reply.code(400).send({ error: 'Query parameter "event" is required' });
+      }
+      return experimentStore.getStats(request.params.key, request.query.event);
+    }
+  );
 
   app.get('/stream', async (request, reply) => {
     reply.hijack();
