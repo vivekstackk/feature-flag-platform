@@ -1,8 +1,9 @@
 import { buildServer } from './server';
+import { config } from './config';
 
 const app = buildServer();
 
-app.listen({ port: 3000 }, (err) => {
+app.listen({ port: config.port }, (err) => {
   if (err) {
     app.log.error(err);
     process.exit(1);

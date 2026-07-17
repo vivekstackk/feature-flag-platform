@@ -7,23 +7,19 @@ import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig, Flag, Creat
 import { evaluateFlag } from './evaluation';
 import { SegmentStore } from './segmentStore';
 import { ExperimentStore } from './experimentStore';
-
+import { config } from './config';
 type FlagPatchBody = Partial<Pick<Flag, 'description' | 'enabled' | 'defaultValue'>>;
 
 export function buildServer(pool?: Pool, redisClient?: Redis) {
-  const app = Fastify({ logger: process.env.NODE_ENV !== 'test' });
+  const app = Fastify({ logger: !config.isTest });
 
   const dbPool =
     pool ??
     new Pool({
-      connectionString:
-        process.env.DATABASE_URL ??
-        'postgresql://ffp:ffp_dev_password@localhost:5432/feature_flags',
+      connectionString: config.databaseUrl,
     });
 
-  const redis =
-    redisClient ??
-    new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+  const redis = redisClient ?? new Redis(config.redisUrl);
 
   const store = new CachedFlagStore(new PgFlagStore(dbPool), redis);
   const segmentStore = new SegmentStore(dbPool);
