@@ -1,5 +1,11 @@
 import { Pool } from 'pg';
-import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from '../types';
+import {
+  CreateFlagInput,
+  FlagConfig,
+  FlagRepository,
+  RolloutConfig,
+  TargetingRule,
+} from '../types';
 
 interface FlagRow {
   id: string;
@@ -41,7 +47,7 @@ export class PgFlagStore implements FlagRepository {
       return rowToFlagConfig(result.rows[0]);
     } catch (err) {
       if ((err as { code?: string }).code === '23505') {
-        throw new Error(`Flag with key "${input.key}" already exists`);
+        throw new Error(`Flag with key "${input.key}" already exists`, { cause: err });
       }
       throw err;
     }

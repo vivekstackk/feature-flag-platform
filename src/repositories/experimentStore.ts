@@ -28,21 +28,26 @@ export class ExperimentStore {
   constructor(private pool: Pool) {}
 
   async logExposure(input: ExposureInput): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO exposures (flag_key, user_id, value) VALUES ($1, $2, $3)`,
-      [input.flagKey, input.userId, input.value]
-    );
+    await this.pool.query(`INSERT INTO exposures (flag_key, user_id, value) VALUES ($1, $2, $3)`, [
+      input.flagKey,
+      input.userId,
+      input.value,
+    ]);
   }
 
   async logOutcome(input: OutcomeInput): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO outcomes (user_id, event_name) VALUES ($1, $2)`,
-      [input.userId, input.eventName]
-    );
+    await this.pool.query(`INSERT INTO outcomes (user_id, event_name) VALUES ($1, $2)`, [
+      input.userId,
+      input.eventName,
+    ]);
   }
 
   async getStats(flagKey: string, eventName: string): Promise<FlagStats> {
-    const result = await this.pool.query<{ value: boolean; exposures: string; conversions: string }>(
+    const result = await this.pool.query<{
+      value: boolean;
+      exposures: string;
+      conversions: string;
+    }>(
       `
       SELECT
         e.value,

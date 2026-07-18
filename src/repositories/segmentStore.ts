@@ -31,14 +31,16 @@ export class SegmentStore {
       return rowToSegment(result.rows[0]);
     } catch (err) {
       if ((err as { code?: string }).code === '23505') {
-        throw new Error(`Segment with name "${input.name}" already exists`);
+        throw new Error(`Segment with name "${input.name}" already exists`, { cause: err });
       }
       throw err;
     }
   }
 
   async getByName(name: string): Promise<Segment | undefined> {
-    const result = await this.pool.query<SegmentRow>('SELECT * FROM segments WHERE name = $1', [name]);
+    const result = await this.pool.query<SegmentRow>('SELECT * FROM segments WHERE name = $1', [
+      name,
+    ]);
     return result.rows[0] ? rowToSegment(result.rows[0]) : undefined;
   }
 

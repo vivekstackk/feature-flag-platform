@@ -80,12 +80,16 @@ describe('evaluateFlag', () => {
     });
 
     expect(evaluateFlag(flag, { userId: 'u1', attributes: { plan: 'beta' } }, segments)).toBe(true);
-    expect(evaluateFlag(flag, { userId: 'u2', attributes: { plan: 'free' } }, segments)).toBe(false);
+    expect(evaluateFlag(flag, { userId: 'u2', attributes: { plan: 'free' } }, segments)).toBe(
+      false
+    );
   });
 
   it('falls through when the referenced segment does not exist', () => {
     const flag = baseFlag({
-      rules: [{ attribute: '', operator: 'inSegment', value: 'nonexistent-segment', serveValue: true }],
+      rules: [
+        { attribute: '', operator: 'inSegment', value: 'nonexistent-segment', serveValue: true },
+      ],
     });
 
     expect(evaluateFlag(flag, { userId: 'u1' }, new Map())).toBe(false);
@@ -113,10 +117,18 @@ describe('evaluateFlag', () => {
     });
 
     expect(
-      evaluateFlag(flag, { userId: 'u1', attributes: { plan: 'enterprise', region: 'eu' } }, segments)
+      evaluateFlag(
+        flag,
+        { userId: 'u1', attributes: { plan: 'enterprise', region: 'eu' } },
+        segments
+      )
     ).toBe(true);
     expect(
-      evaluateFlag(flag, { userId: 'u2', attributes: { plan: 'enterprise', region: 'us' } }, segments)
+      evaluateFlag(
+        flag,
+        { userId: 'u2', attributes: { plan: 'enterprise', region: 'us' } },
+        segments
+      )
     ).toBe(false);
   });
 });

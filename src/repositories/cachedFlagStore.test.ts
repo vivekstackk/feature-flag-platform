@@ -95,7 +95,9 @@ describe('CachedFlagStore', () => {
   it('invalidates the cache when rules are set', async () => {
     const flag = await inner.create({ key: 'rule-flag' });
     await store.getByKey('rule-flag');
-    await store.setRules(flag.id, [{ attribute: 'plan', operator: 'equals', value: 'pro', serveValue: true }]);
+    await store.setRules(flag.id, [
+      { attribute: 'plan', operator: 'equals', value: 'pro', serveValue: true },
+    ]);
     await store.getByKey('rule-flag');
     expect(inner.getByKeyCallCount).toBe(2);
   });

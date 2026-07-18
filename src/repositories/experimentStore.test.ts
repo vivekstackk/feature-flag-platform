@@ -25,9 +25,7 @@ describe('ExperimentStore', () => {
   });
 
   it('logs an outcome without error', async () => {
-    await expect(
-      store.logOutcome({ userId: 'u1', eventName: 'purchase' })
-    ).resolves.not.toThrow();
+    await expect(store.logOutcome({ userId: 'u1', eventName: 'purchase' })).resolves.not.toThrow();
   });
 
   it('computes conversion rate per variant', async () => {

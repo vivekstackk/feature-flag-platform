@@ -1,5 +1,11 @@
 import { randomUUID } from 'crypto';
-import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from '../types';
+import {
+  CreateFlagInput,
+  FlagConfig,
+  FlagRepository,
+  RolloutConfig,
+  TargetingRule,
+} from '../types';
 
 export class FlagStore implements FlagRepository {
   private flags: Map<string, FlagConfig> = new Map();

@@ -22,7 +22,11 @@ export function evaluateFlag(
   return flag.defaultValue;
 }
 
-function matchesRule(rule: TargetingRule, user: UserContext, segments: Map<string, Segment>): boolean {
+function matchesRule(
+  rule: TargetingRule,
+  user: UserContext,
+  segments: Map<string, Segment>
+): boolean {
   if (rule.operator === 'inSegment') {
     const segmentName = rule.value as string;
     const segment = segments.get(segmentName);
@@ -41,7 +45,9 @@ function matchesRule(rule: TargetingRule, user: UserContext, segments: Map<strin
     case 'in':
       return Array.isArray(rule.value) && rule.value.includes(actual as string | number);
     case 'contains':
-      return typeof actual === 'string' && typeof rule.value === 'string' && actual.includes(rule.value);
+      return (
+        typeof actual === 'string' && typeof rule.value === 'string' && actual.includes(rule.value)
+      );
     default:
       return false;
   }
@@ -59,13 +65,21 @@ function matchesCondition(condition: SegmentCondition, user: UserContext): boole
     case 'in':
       return Array.isArray(condition.value) && condition.value.includes(actual as string | number);
     case 'contains':
-      return typeof actual === 'string' && typeof condition.value === 'string' && actual.includes(condition.value);
+      return (
+        typeof actual === 'string' &&
+        typeof condition.value === 'string' &&
+        actual.includes(condition.value)
+      );
     default:
       return false;
   }
 }
 
-function evaluateRollout(flag: FlagConfig, rollout: { percentage: number; serveValue: boolean }, user: UserContext): boolean {
+function evaluateRollout(
+  flag: FlagConfig,
+  rollout: { percentage: number; serveValue: boolean },
+  user: UserContext
+): boolean {
   const bucket = bucketFor(flag.key, user.userId);
   return bucket < rollout.percentage ? rollout.serveValue : flag.defaultValue;
 }

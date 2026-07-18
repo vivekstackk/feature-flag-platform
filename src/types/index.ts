@@ -41,7 +41,10 @@ export interface FlagRepository {
   getById(id: string): Promise<FlagConfig | undefined>;
   getByKey(key: string): Promise<FlagConfig | undefined>;
   getAll(): Promise<FlagConfig[]>;
-  update(id: string, changes: Partial<Pick<FlagConfig, 'description' | 'enabled' | 'defaultValue'>>): Promise<FlagConfig>;
+  update(
+    id: string,
+    changes: Partial<Pick<FlagConfig, 'description' | 'enabled' | 'defaultValue'>>
+  ): Promise<FlagConfig>;
   setRules(id: string, rules: TargetingRule[]): Promise<FlagConfig>;
   setRollout(id: string, rollout: RolloutConfig | null): Promise<FlagConfig>;
   delete(id: string): Promise<boolean>;

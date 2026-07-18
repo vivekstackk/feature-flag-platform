@@ -3,7 +3,14 @@ import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { PgFlagStore } from './repositories/pgFlagStore';
 import { CachedFlagStore, FLAG_CHANGE_CHANNEL } from './repositories/cachedFlagStore';
-import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig, Flag, CreateSegmentInput } from './types';
+import {
+  CreateFlagInput,
+  UserContext,
+  TargetingRule,
+  RolloutConfig,
+  Flag,
+  CreateSegmentInput,
+} from './types';
 import { evaluateFlag } from './services/evaluation';
 import { SegmentStore } from './repositories/segmentStore';
 import { ExperimentStore } from './repositories/experimentStore';
@@ -55,14 +62,17 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     return flag;
   });
 
-  app.patch<{ Params: { id: string }; Body: FlagPatchBody }>('/flags/:id', async (request, reply) => {
-    try {
-      const flag = await store.update(request.params.id, request.body);
-      return flag;
-    } catch (err) {
-      reply.code(404).send({ error: (err as Error).message });
+  app.patch<{ Params: { id: string }; Body: FlagPatchBody }>(
+    '/flags/:id',
+    async (request, reply) => {
+      try {
+        const flag = await store.update(request.params.id, request.body);
+        return flag;
+      } catch (err) {
+        reply.code(404).send({ error: (err as Error).message });
+      }
     }
-  });
+  );
 
   app.delete<{ Params: { id: string } }>('/flags/:id', async (request, reply) => {
     const deleted = await store.delete(request.params.id);

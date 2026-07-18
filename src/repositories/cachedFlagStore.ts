@@ -1,5 +1,11 @@
 import Redis from 'ioredis';
-import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from '../types';
+import {
+  CreateFlagInput,
+  FlagConfig,
+  FlagRepository,
+  RolloutConfig,
+  TargetingRule,
+} from '../types';
 
 const CACHE_TTL_SECONDS = 60;
 export const FLAG_CHANGE_CHANNEL = 'flag-changes';
@@ -9,7 +15,10 @@ function cacheKey(key: string): string {
 }
 
 export class CachedFlagStore implements FlagRepository {
-  constructor(private inner: FlagRepository, private redis: Redis) {}
+  constructor(
+    private inner: FlagRepository,
+    private redis: Redis
+  ) {}
 
   async create(input: CreateFlagInput): Promise<FlagConfig> {
     const flag = await this.inner.create(input);
