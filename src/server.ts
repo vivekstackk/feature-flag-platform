@@ -1,13 +1,14 @@
 import Fastify from 'fastify';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
-import { PgFlagStore } from './pgFlagStore';
-import { CachedFlagStore, FLAG_CHANGE_CHANNEL } from './cachedFlagStore';
+import { PgFlagStore } from './repositories/pgFlagStore';
+import { CachedFlagStore, FLAG_CHANGE_CHANNEL } from './repositories/cachedFlagStore';
 import { CreateFlagInput, UserContext, TargetingRule, RolloutConfig, Flag, CreateSegmentInput } from './types';
-import { evaluateFlag } from './evaluation';
-import { SegmentStore } from './segmentStore';
-import { ExperimentStore } from './experimentStore';
+import { evaluateFlag } from './services/evaluation';
+import { SegmentStore } from './repositories/segmentStore';
+import { ExperimentStore } from './repositories/experimentStore';
 import { config } from './config';
+
 type FlagPatchBody = Partial<Pick<Flag, 'description' | 'enabled' | 'defaultValue'>>;
 
 export function buildServer(pool?: Pool, redisClient?: Redis) {

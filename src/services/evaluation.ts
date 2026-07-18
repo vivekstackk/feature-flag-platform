@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { FlagConfig, Segment, SegmentCondition, TargetingRule, UserContext } from './types';
+import { FlagConfig, Segment, SegmentCondition, TargetingRule, UserContext } from '../types';
 
 export function evaluateFlag(
   flag: FlagConfig,

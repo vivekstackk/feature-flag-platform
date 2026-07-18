@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { CreateSegmentInput, Segment, SegmentCondition } from './types';
+import { CreateSegmentInput, Segment, SegmentCondition } from '../types';
 
 interface SegmentRow {
   id: string;

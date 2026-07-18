@@ -1,5 +1,5 @@
 import { evaluateFlag, bucketFor } from './evaluation';
-import { FlagConfig } from './types';
+import { FlagConfig } from '../types';
 
 function baseFlag(overrides: Partial<FlagConfig> = {}): FlagConfig {
   return {

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from './types';
+import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from '../types';
 
 interface FlagRow {
   id: string;

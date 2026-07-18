@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
 import { CachedFlagStore } from './cachedFlagStore';
-import { FlagRepository, FlagConfig, CreateFlagInput } from './types';
+import { FlagRepository, FlagConfig, CreateFlagInput } from '../types';
 
 class FakeInnerStore implements FlagRepository {
   public getByKeyCallCount = 0;

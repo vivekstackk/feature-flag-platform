@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from './types';
+import { CreateFlagInput, FlagConfig, FlagRepository, RolloutConfig, TargetingRule } from '../types';
 
 const CACHE_TTL_SECONDS = 60;
 export const FLAG_CHANGE_CHANNEL = 'flag-changes';

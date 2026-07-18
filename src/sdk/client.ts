@@ -1,5 +1,5 @@
 import { EventSource } from 'eventsource';
-import { evaluateFlag } from '../evaluation';
+import { evaluateFlag } from '../services/evaluation';
 import { FlagConfig, UserContext } from '../types';
 
 const POLL_INTERVAL_MS = 10000;
