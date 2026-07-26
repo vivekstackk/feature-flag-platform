@@ -59,7 +59,7 @@ jobs:
         run: npm run format:check
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --runInBand
         env:
           DATABASE_URL: postgresql://ffp:ffp_dev_password@localhost:5432/feature_flags
           REDIS_URL: redis://localhost:6379
