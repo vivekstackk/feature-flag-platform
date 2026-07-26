@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 
@@ -143,7 +144,11 @@ function App() {
                     key={flag.id}
                     className="border-b border-border last:border-none hover:bg-surface-high"
                   >
-                    <td className="px-4 py-3 font-mono text-text">{flag.key}</td>
+                   <td className="px-4 py-3 font-mono text-text">
+                      <Link to={`/flags/${flag.id}`} className="hover:text-primary hover:underline">
+                        {flag.key}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => handleToggle(flag)}
