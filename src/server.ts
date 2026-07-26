@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { PgFlagStore } from './repositories/pgFlagStore';
@@ -20,6 +21,10 @@ type FlagPatchBody = Partial<Pick<Flag, 'description' | 'enabled' | 'defaultValu
 
 export function buildServer(pool?: Pool, redisClient?: Redis) {
   const app = Fastify({ logger: !config.isTest });
+
+  app.register(cors, {
+    origin: true,
+  });
 
   const dbPool =
     pool ??

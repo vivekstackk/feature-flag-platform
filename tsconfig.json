@@ -14,5 +14,5 @@
     "moduleDetection": "force",
     "types": ["node", "jest"]
   },
-  "exclude": ["scripts", "node_modules", "dist"]
+  "exclude": ["scripts", "node_modules", "dist", "dashboard"]
 }
