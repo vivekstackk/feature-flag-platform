@@ -24,6 +24,7 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
 
   app.register(cors, {
     origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
 
   const dbPool =
