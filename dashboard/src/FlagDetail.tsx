@@ -32,6 +32,10 @@ function FlagDetail() {
   const [savingRollout, setSavingRollout] = useState(false);
   const [rolloutSaved, setRolloutSaved] = useState(true);
 
+  const [rules, setRules] = useState<TargetingRule[]>([]);
+  const [rulesSaved, setRulesSaved] = useState(true);
+  const [savingRules, setSavingRules] = useState(false);
+
   useEffect(() => {
     fetchFlag();
   }, [id]);
@@ -44,6 +48,7 @@ function FlagDetail() {
       const data = await response.json();
       setFlag(data);
       setRolloutPercentage(data.rollout?.percentage ?? 0);
+      setRules(data.rules ?? []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load flag');
@@ -73,6 +78,46 @@ function FlagDetail() {
       setError(err instanceof Error ? err.message : 'Failed to save rollout');
     } finally {
       setSavingRollout(false);
+    }
+  }
+
+  function addRule() {
+    setRules((prev) => [
+      ...prev,
+      { attribute: '', operator: 'equals', value: '', serveValue: true },
+    ]);
+    setRulesSaved(false);
+  }
+
+  function updateRule(index: number, changes: Partial<TargetingRule>) {
+    setRules((prev) => prev.map((rule, i) => (i === index ? { ...rule, ...changes } : rule)));
+    setRulesSaved(false);
+  }
+
+  function removeRule(index: number) {
+    setRules((prev) => prev.filter((_, i) => i !== index));
+    setRulesSaved(false);
+  }
+
+  async function handleSaveRules() {
+    if (!flag) return;
+    setSavingRules(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/flags/${flag.id}/rules`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules }),
+      });
+
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      const updated = await response.json();
+      setFlag(updated);
+      setRulesSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save rules');
+    } finally {
+      setSavingRules(false);
     }
   }
 
@@ -143,6 +188,111 @@ function FlagDetail() {
             }`}
           >
             {savingRollout ? 'Saving…' : rolloutSaved ? 'Saved ✓' : 'Save Rollout'}
+          </button>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-border bg-surface p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Targeting Rules</h2>
+            <button
+              onClick={addRule}
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-text-dim transition-colors hover:border-primary hover:text-text"
+            >
+              + Add Rule
+            </button>
+          </div>
+
+          {rules.length === 0 && (
+            <p className="text-sm text-text-dim">No rules yet. Add one to target specific users.</p>
+          )}
+
+          <div className="space-y-3">
+            {rules.map((rule, index) => (
+              <div key={index} className="rounded-md border border-border bg-bg p-4">
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-4">
+                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-text-dim">
+                      Attribute
+                    </label>
+                    <input
+                      type="text"
+                      value={rule.attribute}
+                      onChange={(e) => updateRule(index, { attribute: e.target.value })}
+                      placeholder="plan"
+                      className="w-full rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-sm text-text focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-text-dim">
+                      Operator
+                    </label>
+                    <select
+                      value={rule.operator}
+                      onChange={(e) => updateRule(index, { operator: e.target.value })}
+                      className="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text focus:border-primary focus:outline-none"
+                    >
+                      <option value="equals">equals</option>
+                      <option value="notEquals">not equals</option>
+                      <option value="in">in</option>
+                      <option value="contains">contains</option>
+                      <option value="inSegment">in segment</option>
+                    </select>
+                  </div>
+                  <div className="col-span-5">
+                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-text-dim">
+                      Value
+                    </label>
+                    <input
+                      type="text"
+                      value={String(rule.value)}
+                      onChange={(e) => updateRule(index, { value: e.target.value })}
+                      placeholder="pro"
+                      className="w-full rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-sm text-text focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                  <div className="flex items-center gap-2 text-sm text-text-dim">
+                    Then serve:
+                    <button
+                      onClick={() => updateRule(index, { serveValue: true })}
+                      className={`rounded-md px-3 py-1 text-xs font-medium ${
+                        rule.serveValue ? 'bg-surface-high text-text' : 'text-text-dim'
+                      }`}
+                    >
+                      True
+                    </button>
+                    <button
+                      onClick={() => updateRule(index, { serveValue: false })}
+                      className={`rounded-md px-3 py-1 text-xs font-medium ${
+                        !rule.serveValue ? 'bg-surface-high text-text' : 'text-text-dim'
+                      }`}
+                    >
+                      False
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => removeRule(index)}
+                    className="text-sm text-text-dim transition-colors hover:text-danger"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleSaveRules}
+            disabled={savingRules || rulesSaved}
+            className={`mt-4 rounded-md px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-50 ${
+              rulesSaved && !savingRules
+                ? 'bg-success/15 text-success'
+                : 'bg-primary text-white hover:opacity-90'
+            }`}
+          >
+            {savingRules ? 'Saving…' : rulesSaved ? 'Saved ✓' : 'Save Rules'}
           </button>
         </section>
       </div>
