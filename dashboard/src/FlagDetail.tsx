@@ -8,6 +8,13 @@ interface TargetingRule {
   serveValue: boolean;
 }
 
+interface VariantStats {
+  variant: boolean;
+  exposures: number;
+  conversions: number;
+  conversionRate: number;
+}
+
 interface Flag {
   id: string;
   key: string;
@@ -35,6 +42,11 @@ function FlagDetail() {
   const [rules, setRules] = useState<TargetingRule[]>([]);
   const [rulesSaved, setRulesSaved] = useState(true);
   const [savingRules, setSavingRules] = useState(false);
+
+  const [eventName, setEventName] = useState('');
+  const [stats, setStats] = useState<VariantStats[] | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFlag();
@@ -118,6 +130,25 @@ function FlagDetail() {
       setError(err instanceof Error ? err.message : 'Failed to save rules');
     } finally {
       setSavingRules(false);
+    }
+  }
+
+  async function handleLoadStats() {
+    if (!flag || !eventName.trim()) return;
+    setLoadingStats(true);
+    setStatsError(null);
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/experiments/${flag.key}/stats?event=${encodeURIComponent(eventName)}`
+      );
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      const data = await response.json();
+      setStats(data.variants);
+    } catch (err) {
+      setStatsError(err instanceof Error ? err.message : 'Failed to load stats');
+    } finally {
+      setLoadingStats(false);
     }
   }
 
@@ -294,6 +325,64 @@ function FlagDetail() {
           >
             {savingRules ? 'Saving…' : rulesSaved ? 'Saved ✓' : 'Save Rules'}
           </button>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-border bg-surface p-6">
+          <h2 className="mb-4 text-lg font-semibold">Experiment Stats</h2>
+          <div className="mb-4 flex items-center gap-3">
+            <input
+              type="text"
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+              placeholder="purchase"
+              className="flex-1 rounded-md border border-border bg-bg px-3 py-2 font-mono text-sm text-text placeholder-text-dim/50 focus:border-primary focus:outline-none"
+            />
+            <button
+              onClick={handleLoadStats}
+              disabled={loadingStats || !eventName.trim()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {loadingStats ? 'Loading…' : 'Load Stats'}
+            </button>
+          </div>
+
+          {statsError && <p className="text-sm text-danger">{statsError}</p>}
+
+          {stats && stats.length === 0 && (
+            <p className="text-sm text-text-dim">No exposure data yet for this event.</p>
+          )}
+
+          {stats && stats.length > 0 && (
+            <div className="space-y-3">
+              {stats.map((variant) => (
+                <div
+                  key={String(variant.variant)}
+                  className="flex items-center justify-between rounded-md border border-border bg-bg p-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${variant.variant ? 'bg-success' : 'bg-text-dim'}`}
+                    />
+                    <span className="font-mono text-sm">{variant.variant ? 'true' : 'false'}</span>
+                  </div>
+                  <div className="flex items-center gap-6 text-sm">
+                    <span className="text-text-dim">
+                      Exposures: <span className="font-mono text-text">{variant.exposures}</span>
+                    </span>
+                    <span className="text-text-dim">
+                      Conversions: <span className="font-mono text-text">{variant.conversions}</span>
+                    </span>
+                    <span className="text-text-dim">
+                      Rate:{' '}
+                      <span className="font-mono text-text">
+                        {(variant.conversionRate * 100).toFixed(1)}%
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
