@@ -108,12 +108,20 @@ function App() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">Feature Flags</h1>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="rounded-full border border-primary px-4 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white"
-          >
-            + New Flag
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/segments"
+              className="text-sm text-text-dim transition-colors hover:text-text"
+            >
+              Segments
+            </Link>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="rounded-full border border-primary px-4 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+            >
+              + New Flag
+            </button>
+          </div>
         </header>
 
         {loading && <p className="text-sm text-text-dim">Loading flags…</p>}
@@ -144,7 +152,7 @@ function App() {
                     key={flag.id}
                     className="border-b border-border last:border-none hover:bg-surface-high"
                   >
-                   <td className="px-4 py-3 font-mono text-text">
+                    <td className="px-4 py-3 font-mono text-text">
                       <Link to={`/flags/${flag.id}`} className="hover:text-primary hover:underline">
                         {flag.key}
                       </Link>
