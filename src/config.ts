@@ -7,4 +7,5 @@ export const config = {
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isTest: process.env.NODE_ENV === 'test',
+  apiKey: process.env.API_KEY ?? 'dev-only-insecure-key',
 };

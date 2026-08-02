@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
+import { apiFetch } from './api';
 
 interface Flag {
   id: string;
@@ -12,8 +13,6 @@ interface Flag {
   createdAt: string;
   updatedAt: string;
 }
-
-const API_BASE = 'http://localhost:3000';
 
 function App() {
   const [flags, setFlags] = useState<Flag[]>([]);
@@ -33,7 +32,7 @@ function App() {
   async function fetchFlags() {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/flags`);
+      const response = await apiFetch('/flags');
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       const data = await response.json();
       setFlags(data);
@@ -51,7 +50,7 @@ function App() {
     setCreateError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/flags`, {
+      const response = await apiFetch('/flags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: newKey, description: newDescription }),
@@ -86,7 +85,7 @@ function App() {
     );
 
     try {
-      const response = await fetch(`${API_BASE}/flags/${flag.id}`, {
+      const response = await apiFetch(`/flags/${flag.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: newEnabled }),

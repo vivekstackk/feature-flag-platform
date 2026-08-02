@@ -27,6 +27,13 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
 
+  app.addHook('preHandler', async (request, reply) => {
+    const providedKey = request.headers['x-api-key'];
+    if (providedKey !== config.apiKey) {
+      reply.code(401).send({ error: 'Unauthorized: missing or invalid API key' });
+    }
+  });
+
   const dbPool =
     pool ??
     new Pool({

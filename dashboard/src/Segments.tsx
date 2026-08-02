@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Modal } from './Modal';
+import { apiFetch } from './api';
 
 interface SegmentCondition {
   attribute: string;
@@ -15,8 +16,6 @@ interface Segment {
   createdAt: string;
   updatedAt: string;
 }
-
-const API_BASE = 'http://localhost:3000';
 
 function Segments() {
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -35,7 +34,7 @@ function Segments() {
   async function fetchSegments() {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/segments`);
+      const response = await apiFetch('/segments');
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       const data = await response.json();
       setSegments(data);
@@ -53,7 +52,7 @@ function Segments() {
     setCreateError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/segments`, {
+      const response = await apiFetch('/segments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName, conditions: [] }),
@@ -81,7 +80,7 @@ function Segments() {
     if (!confirm(`Delete segment "${segment.name}"? This cannot be undone.`)) return;
 
     try {
-      const response = await fetch(`${API_BASE}/segments/${segment.id}`, {
+      const response = await apiFetch(`/segments/${segment.id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);

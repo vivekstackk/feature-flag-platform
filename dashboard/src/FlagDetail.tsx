@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { apiFetch } from './api';
 
 interface TargetingRule {
   attribute: string;
@@ -27,8 +28,6 @@ interface Flag {
   updatedAt: string;
 }
 
-const API_BASE = 'http://localhost:3000';
-
 function FlagDetail() {
   const { id } = useParams<{ id: string }>();
   const [flag, setFlag] = useState<Flag | null>(null);
@@ -55,7 +54,7 @@ function FlagDetail() {
   async function fetchFlag() {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/flags/${id}`);
+      const response = await apiFetch(`/flags/${id}`);
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       const data = await response.json();
       setFlag(data);
@@ -74,7 +73,7 @@ function FlagDetail() {
     setSavingRollout(true);
 
     try {
-      const response = await fetch(`${API_BASE}/flags/${flag.id}/rollout`, {
+      const response = await apiFetch(`/flags/${flag.id}/rollout`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -116,7 +115,7 @@ function FlagDetail() {
     setSavingRules(true);
 
     try {
-      const response = await fetch(`${API_BASE}/flags/${flag.id}/rules`, {
+      const response = await apiFetch(`/flags/${flag.id}/rules`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rules }),
@@ -139,8 +138,8 @@ function FlagDetail() {
     setStatsError(null);
 
     try {
-      const response = await fetch(
-        `${API_BASE}/experiments/${flag.key}/stats?event=${encodeURIComponent(eventName)}`
+      const response = await apiFetch(
+        `/experiments/${flag.key}/stats?event=${encodeURIComponent(eventName)}`
       );
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       const data = await response.json();
