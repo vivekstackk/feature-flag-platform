@@ -12,45 +12,41 @@ const pool = new Pool({
 const redis = new Redis({ host: 'localhost', port: 6379 });
 
 describe('SSE stream', () => {
-  it(
-    'pushes a message on the stream when a flag changes',
-    async () => {
-      await pool.query('DELETE FROM flags');
-      const streamApp = buildServer(pool, redis);
-      await streamApp.ready();
+  it('pushes a message on the stream when a flag changes', async () => {
+    await pool.query('DELETE FROM flags');
+    const streamApp = buildServer(pool, redis);
+    await streamApp.ready();
 
-      const address = await streamApp.listen({ port: 0, host: '127.0.0.1' });
-      const streamResponse = await fetch(`${address}/stream`, { headers: authHeaders });
-      const reader = streamResponse.body!.getReader();
+    const address = await streamApp.listen({ port: 0, host: '127.0.0.1' });
+    const streamResponse = await fetch(`${address}/stream`, { headers: authHeaders });
+    const reader = streamResponse.body!.getReader();
 
-      const streamPromise = (async () => {
-        const decoder = new TextDecoder();
-        let buffer = '';
-        while (!buffer.includes('stream-test-flag')) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-        }
-        return buffer;
-      })();
+    const streamPromise = (async () => {
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (!buffer.includes('stream-test-flag')) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+      }
+      return buffer;
+    })();
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
-      await streamApp.inject({
-        method: 'POST',
-        url: '/flags',
-        payload: { key: 'stream-test-flag' },
-        headers: authHeaders,
-      });
+    await streamApp.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'stream-test-flag' },
+      headers: authHeaders,
+    });
 
-      const chunk = await streamPromise;
-      expect(chunk).toContain('stream-test-flag');
+    const chunk = await streamPromise;
+    expect(chunk).toContain('stream-test-flag');
 
-      reader.cancel();
-      await streamApp.close();
-    },
-    10000
-  );
+    reader.cancel();
+    await streamApp.close();
+  }, 10000);
 });
 
 describe('Flag API', () => {
@@ -88,7 +84,12 @@ describe('Flag API', () => {
   });
 
   it('rejects duplicate keys with 409', async () => {
-    await app.inject({ method: 'POST', url: '/flags', payload: { key: 'dup' }, headers: authHeaders });
+    await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'dup' },
+      headers: authHeaders,
+    });
     const response = await app.inject({
       method: 'POST',
       url: '/flags',
@@ -100,8 +101,18 @@ describe('Flag API', () => {
   });
 
   it('lists all flags via GET /flags', async () => {
-    await app.inject({ method: 'POST', url: '/flags', payload: { key: 'a' }, headers: authHeaders });
-    await app.inject({ method: 'POST', url: '/flags', payload: { key: 'b' }, headers: authHeaders });
+    await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'a' },
+      headers: authHeaders,
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/flags',
+      payload: { key: 'b' },
+      headers: authHeaders,
+    });
 
     const response = await app.inject({ method: 'GET', url: '/flags', headers: authHeaders });
     const body = JSON.parse(response.body);
@@ -110,7 +121,11 @@ describe('Flag API', () => {
   });
 
   it('returns 404 for a non-existent flag', async () => {
-    const response = await app.inject({ method: 'GET', url: '/flags/fake-id', headers: authHeaders });
+    const response = await app.inject({
+      method: 'GET',
+      url: '/flags/fake-id',
+      headers: authHeaders,
+    });
     expect(response.statusCode).toBe(404);
   });
 
@@ -143,7 +158,11 @@ describe('Flag API', () => {
     });
     const { id } = JSON.parse(created.body);
 
-    const response = await app.inject({ method: 'DELETE', url: `/flags/${id}`, headers: authHeaders });
+    const response = await app.inject({
+      method: 'DELETE',
+      url: `/flags/${id}`,
+      headers: authHeaders,
+    });
     expect(response.statusCode).toBe(204);
 
     const getResponse = await app.inject({
