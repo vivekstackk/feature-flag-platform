@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "cross-env NODE_ENV=test jest",
-    "lint": "eslint src",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\""
-  },
+ "scripts": {
+  "test": "cross-env NODE_ENV=test jest",
+  "lint": "eslint src",
+  "format": "prettier --write \"src/**/*.ts\"",
+  "format:check": "prettier --check \"src/**/*.ts\"",
+  "build": "tsc"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
