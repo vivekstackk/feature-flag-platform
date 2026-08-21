@@ -90,7 +90,8 @@ function App() {
         const body = await response.json();
 
         setCreateError(
-          body.error ?? 'A flag with that key already exists.'
+          body.error ??
+            'A flag with that key already exists.'
         );
 
         return;
@@ -125,8 +126,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
+
       {/* TOP BAR */}
       <header className="flex h-[74px] items-center justify-between border-b border-border px-6 lg:px-10">
+
         <Link
           to="/dashboard"
           className="flex items-center gap-3"
@@ -157,9 +160,12 @@ function App() {
       </header>
 
       <div className="flex min-h-[calc(100vh-74px)]">
+
         {/* SIDEBAR */}
         <aside className="hidden w-[280px] shrink-0 border-r border-border px-6 py-9 lg:block">
+
           <nav className="space-y-2">
+
             <Link
               to="/dashboard"
               className={`flex items-center justify-between rounded-xl px-4 py-3.5 text-[15px] font-medium transition-colors ${
@@ -189,12 +195,14 @@ function App() {
                 <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_rgba(59,130,246,0.55)]" />
               )}
             </Link>
+
           </nav>
 
           <div className="my-9 border-t border-border" />
 
           {/* ENVIRONMENT */}
           <div className="px-4">
+
             <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim">
               Environment
             </div>
@@ -206,12 +214,14 @@ function App() {
                 Production
               </span>
             </div>
+
           </div>
 
           <div className="my-9 border-t border-border" />
 
           {/* RUNTIME */}
           <div className="px-4">
+
             <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim">
               Runtime
             </div>
@@ -221,15 +231,21 @@ function App() {
               <RuntimeItem label="REDIS" value="READY" />
               <RuntimeItem label="STREAM" value="READY" />
             </div>
+
           </div>
+
         </aside>
 
         {/* MAIN */}
         <main className="min-w-0 flex-1 px-6 py-10 lg:px-14 lg:py-12">
+
           <div className="mx-auto max-w-[1500px]">
+
             {/* HEADER */}
             <section className="flex flex-col gap-8 border-b border-border pb-9 xl:flex-row xl:items-end xl:justify-between">
+
               <div>
+
                 <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-text-dim">
                   Configuration
                 </div>
@@ -242,6 +258,7 @@ function App() {
                   Control releases, targeting and gradual
                   rollouts from one place.
                 </p>
+
               </div>
 
               <button
@@ -250,12 +267,16 @@ function App() {
                 className="inline-flex h-13 shrink-0 items-center justify-center gap-3 rounded-full bg-primary px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(59,130,246,0.18)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_35px_rgba(59,130,246,0.28)]"
               >
                 + New flag
-                <span className="text-[18px]">→</span>
+                <span className="text-[18px]">
+                  →
+                </span>
               </button>
+
             </section>
 
             {/* MOBILE NAV */}
             <div className="flex gap-2 border-b border-border py-4 lg:hidden">
+
               <Link
                 to="/dashboard"
                 className={`rounded-lg px-4 py-2.5 text-[14px] ${
@@ -277,10 +298,12 @@ function App() {
               >
                 Segments
               </Link>
+
             </div>
 
             {/* FLAGS */}
             <section className="pt-9">
+
               {loading && (
                 <div className="border-y border-border py-8 text-[15px] text-text-dim">
                   Loading feature flags…
@@ -295,8 +318,11 @@ function App() {
 
               {!loading && !error && (
                 <>
+
                   <div className="space-y-4">
+
                     {flags.map((flag) => {
+
                       const rollout =
                         typeof flag.rolloutPercentage ===
                         'number'
@@ -304,13 +330,25 @@ function App() {
                           : null;
 
                       return (
-                        <div
+
+                        /*
+                         * IMPORTANT:
+                         * This is now a Link instead of a div.
+                         * Clicking anywhere on the flag opens
+                         * /flags/:id.
+                         */
+                        <Link
                           key={flag.id}
-                          className="rounded-2xl border border-border bg-surface/55 px-7 py-7 transition-all duration-200 hover:border-border/80 hover:bg-surface"
+                          to={`/flags/${flag.id}`}
+                          className="group block rounded-2xl border border-border bg-surface/55 px-7 py-7 transition-all duration-200 hover:border-primary/40 hover:bg-surface hover:shadow-[0_0_35px_rgba(59,130,246,0.07)]"
                         >
+
                           <div className="grid grid-cols-1 items-center gap-7 md:grid-cols-[1.5fr_0.8fr_100px]">
+
+                            {/* FLAG INFO */}
                             <div className="min-w-0">
-                              <div className="truncate font-mono text-[16px] font-semibold text-text">
+
+                              <div className="truncate font-mono text-[17px] font-semibold text-text transition-colors group-hover:text-primary">
                                 {flag.key}
                               </div>
 
@@ -318,9 +356,12 @@ function App() {
                                 {flag.description ||
                                   'No description provided'}
                               </div>
+
                             </div>
 
+                            {/* STATUS */}
                             <div className="flex items-center gap-2.5">
+
                               <span
                                 className={`h-2.5 w-2.5 rounded-full ${
                                   flag.enabled
@@ -340,22 +381,34 @@ function App() {
                                   ? 'Enabled'
                                   : 'Disabled'}
                               </span>
+
                             </div>
 
-                            <div className="text-left md:text-right">
+                            {/* ROLLOUT */}
+                            <div className="flex items-center justify-end gap-3">
+
                               <span className="font-mono text-[15px] text-text-dim">
                                 {rollout !== null
                                   ? `${rollout}%`
                                   : '—'}
                               </span>
+
+                              <span className="text-[17px] text-text-dim transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary">
+                                →
+                              </span>
+
                             </div>
+
                           </div>
-                        </div>
+
+                        </Link>
                       );
                     })}
 
                     {flags.length === 0 && (
+
                       <div className="border-y border-border py-20 text-center">
+
                         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim">
                           No flags configured
                         </div>
@@ -373,11 +426,15 @@ function App() {
                         >
                           Create your first flag →
                         </button>
+
                       </div>
+
                     )}
+
                   </div>
 
                   <div className="mt-9 flex items-center justify-between border-t border-border pt-5">
+
                     <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-dim">
                       {flags.length}{' '}
                       {flags.length === 1
@@ -389,16 +446,23 @@ function App() {
                     <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-dim">
                       Production / Live
                     </span>
+
                   </div>
+
                 </>
               )}
+
             </section>
+
           </div>
+
         </main>
+
       </div>
 
       {/* CREATE FLAG MODAL */}
       {showModal && (
+
         <Modal
           title="Create Feature Flag"
           onClose={() => {
@@ -407,11 +471,14 @@ function App() {
             }
           }}
         >
+
           <form
             onSubmit={handleCreateFlag}
             className="space-y-6"
           >
+
             <div>
+
               <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-text-dim">
                 Key
               </label>
@@ -420,13 +487,17 @@ function App() {
                 type="text"
                 required
                 value={newKey}
-                onChange={(e) => setNewKey(e.target.value)}
+                onChange={(e) =>
+                  setNewKey(e.target.value)
+                }
                 placeholder="new-checkout"
                 className="w-full rounded-lg border border-border bg-bg px-4 py-3 font-mono text-[15px] text-text placeholder:text-text-dim/50 focus:border-primary focus:outline-none"
               />
+
             </div>
 
             <div>
+
               <label className="mb-2 block font-mono text-[11px] uppercase tracking-[0.15em] text-text-dim">
                 Description
               </label>
@@ -440,6 +511,7 @@ function App() {
                 placeholder="New checkout experience"
                 className="w-full rounded-lg border border-border bg-bg px-4 py-3 text-[15px] text-text placeholder:text-text-dim/50 focus:border-primary focus:outline-none"
               />
+
             </div>
 
             {createError && (
@@ -449,10 +521,13 @@ function App() {
             )}
 
             <div className="flex justify-end gap-3 border-t border-border pt-5">
+
               <button
                 type="button"
                 disabled={creating}
-                onClick={() => setShowModal(false)}
+                onClick={() =>
+                  setShowModal(false)
+                }
                 className="rounded-lg px-4 py-2.5 text-[14px] text-text-dim hover:text-text disabled:opacity-50"
               >
                 Cancel
@@ -467,10 +542,15 @@ function App() {
                   ? 'Creating…'
                   : 'Create flag'}
               </button>
+
             </div>
+
           </form>
+
         </Modal>
+
       )}
+
     </div>
   );
 }
@@ -484,6 +564,7 @@ function RuntimeItem({
 }) {
   return (
     <div className="flex items-center justify-between gap-5">
+
       <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-dim">
         {label}
       </span>
@@ -491,6 +572,7 @@ function RuntimeItem({
       <span className="font-mono text-[11px] font-medium text-success">
         {value}
       </span>
+
     </div>
   );
 }
