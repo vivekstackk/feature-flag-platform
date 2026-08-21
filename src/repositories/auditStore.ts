@@ -30,7 +30,31 @@ function rowToEntry(row: AuditRow): AuditEntry {
 }
 
 export class AuditStore {
+  private ready = false;
+
   constructor(private pool: Pool) {}
+
+  async ensureTable(): Promise<void> {
+    if (this.ready) return;
+    try {
+      await this.pool.query(`
+        CREATE TABLE IF NOT EXISTS audit_log (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          entity_type TEXT NOT NULL,
+          entity_id TEXT NOT NULL,
+          action TEXT NOT NULL,
+          changes JSONB NOT NULL DEFAULT '{}',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `);
+      await this.pool.query(
+        `CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id)`
+      );
+      this.ready = true;
+    } catch {
+      console.warn('[AuditStore] Failed to create audit_log table, audit logging disabled');
+    }
+  }
 
   async log(entry: {
     entityType: string;
@@ -38,25 +62,40 @@ export class AuditStore {
     action: string;
     changes: Record<string, unknown>;
   }): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO audit_log (entity_type, entity_id, action, changes) VALUES ($1, $2, $3, $4)`,
-      [entry.entityType, entry.entityId, entry.action, JSON.stringify(entry.changes)]
-    );
+    try {
+      await this.ensureTable();
+      await this.pool.query(
+        `INSERT INTO audit_log (entity_type, entity_id, action, changes) VALUES ($1, $2, $3, $4)`,
+        [entry.entityType, entry.entityId, entry.action, JSON.stringify(entry.changes)]
+      );
+    } catch {
+      console.warn('[AuditStore] Failed to log audit entry, continuing');
+    }
   }
 
   async getByEntity(entityType: string, entityId: string): Promise<AuditEntry[]> {
-    const result = await this.pool.query<AuditRow>(
-      `SELECT * FROM audit_log WHERE entity_type = $1 AND entity_id = $2 ORDER BY created_at DESC`,
-      [entityType, entityId]
-    );
-    return result.rows.map(rowToEntry);
+    try {
+      await this.ensureTable();
+      const result = await this.pool.query<AuditRow>(
+        `SELECT * FROM audit_log WHERE entity_type = $1 AND entity_id = $2 ORDER BY created_at DESC`,
+        [entityType, entityId]
+      );
+      return result.rows.map(rowToEntry);
+    } catch {
+      return [];
+    }
   }
 
   async getAll(limit: number = 50): Promise<AuditEntry[]> {
-    const result = await this.pool.query<AuditRow>(
-      `SELECT * FROM audit_log ORDER BY created_at DESC LIMIT $1`,
-      [limit]
-    );
-    return result.rows.map(rowToEntry);
+    try {
+      await this.ensureTable();
+      const result = await this.pool.query<AuditRow>(
+        `SELECT * FROM audit_log ORDER BY created_at DESC LIMIT $1`,
+        [limit]
+      );
+      return result.rows.map(rowToEntry);
+    } catch {
+      return [];
+    }
   }
 }
