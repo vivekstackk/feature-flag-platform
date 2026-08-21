@@ -34,13 +34,21 @@ function Segments() {
   async function fetchSegments() {
     try {
       setLoading(true);
+
       const response = await apiFetch('/segments');
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      const data = await response.json();
-      setSegments(data);
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      setSegments(await response.json());
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load segments');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to load segments'
+      );
     } finally {
       setLoading(false);
     }
@@ -48,156 +56,233 @@ function Segments() {
 
   async function handleCreateSegment(e: React.FormEvent) {
     e.preventDefault();
+
     setCreating(true);
     setCreateError(null);
 
     try {
       const response = await apiFetch('/segments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, conditions: [] }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newName,
+          conditions: [],
+        }),
       });
 
       if (response.status === 409) {
         const body = await response.json();
-        setCreateError(body.error ?? 'A segment with that name already exists');
+
+        setCreateError(
+          body.error ??
+            'A segment with that name already exists'
+        );
+
         return;
       }
 
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
 
       setNewName('');
       setShowCreateModal(false);
+
       await fetchSegments();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Failed to create segment');
+      setCreateError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to create segment'
+      );
     } finally {
       setCreating(false);
     }
   }
 
   async function handleDelete(segment: Segment) {
-    if (!confirm(`Delete segment "${segment.name}"? This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Delete segment "${segment.name}"? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
 
     try {
-      const response = await apiFetch(`/segments/${segment.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      setSegments((prev) => prev.filter((s) => s.id !== segment.id));
+      const response = await apiFetch(
+        `/segments/${segment.id}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      setSegments((prev) =>
+        prev.filter((s) => s.id !== segment.id)
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete segment');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to delete segment'
+      );
     }
   }
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <Link to="/" className="mb-6 inline-block text-sm text-text-dim hover:text-text">
-          ← Back to flags
+      <div className="mx-auto max-w-[1020px] px-6 py-8 lg:px-0 lg:py-10">
+
+        <Link
+          to="/"
+          className="mb-8 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-text-dim hover:text-text"
+        >
+          ← Feature Flags
         </Link>
 
-        <header className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">Segments</h1>
+        <header className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
+              Audience
+            </div>
+
+            <h1 className="text-[28px] font-semibold tracking-[-0.035em]">
+              Segments
+            </h1>
+          </div>
+
           <button
             onClick={() => setShowCreateModal(true)}
-            className="rounded-full border border-primary px-4 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+            className="self-start border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary hover:text-white sm:self-auto"
           >
             + New Segment
           </button>
         </header>
 
-        {loading && <p className="text-sm text-text-dim">Loading segments…</p>}
-        {error && <p className="text-sm text-danger">Error: {error}</p>}
-
-        {!loading && !error && (
-          <div className="overflow-hidden rounded-lg border border-border bg-surface">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-dim">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-dim">
-                    Conditions
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-dim">
-                    Updated
-                  </th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {segments.map((segment) => (
-                  <tr
-                    key={segment.id}
-                    className="border-b border-border last:border-none hover:bg-surface-high"
-                  >
-                    <td className="px-4 py-3 font-mono text-text">
-                      <Link to={`/segments/${segment.id}`} className="hover:text-primary hover:underline">
-                        {segment.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-text-dim">{segment.conditions.length}</td>
-                    <td className="px-4 py-3 text-text-dim">
-                      {new Date(segment.updatedAt).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(segment)}
-                        className="text-sm text-text-dim transition-colors hover:text-danger"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {segments.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-text-dim">
-                      No segments yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {loading && (
+          <div className="border-y border-border py-6 font-mono text-xs text-text-dim">
+            Loading segments…
           </div>
         )}
+
+        {error && (
+          <div className="border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="border border-border bg-surface/20">
+
+            <div className="grid grid-cols-[1.5fr_1fr_1.4fr_70px] border-b border-border px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-text-dim">
+              <span>Name</span>
+              <span>Conditions</span>
+              <span>Updated</span>
+              <span />
+            </div>
+
+            {segments.map((segment) => (
+              <div
+                key={segment.id}
+                className="grid grid-cols-[1.5fr_1fr_1.4fr_70px] items-center border-b border-border px-5 py-5 last:border-b-0 hover:bg-surface"
+              >
+                <Link
+                  to={`/segments/${segment.id}`}
+                  className="truncate font-mono text-[13px] hover:text-primary"
+                >
+                  {segment.name}
+                </Link>
+
+                <span className="font-mono text-xs text-text-dim">
+                  {segment.conditions.length}
+                </span>
+
+                <span className="truncate pr-4 text-xs text-text-dim">
+                  {new Date(
+                    segment.updatedAt
+                  ).toLocaleString()}
+                </span>
+
+                <button
+                  onClick={() => handleDelete(segment)}
+                  className="justify-self-end text-xs text-text-dim hover:text-danger"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+
+            {segments.length === 0 && (
+              <div className="px-5 py-20 text-center">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim">
+                  No segments yet
+                </div>
+
+                <p className="mt-3 text-sm text-text-dim">
+                  Create a reusable audience for your targeting rules.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="mt-5 border-t border-border pt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-text-dim">
+          {segments.length} segment
+          {segments.length === 1 ? '' : 's'}
+        </div>
       </div>
 
       {showCreateModal && (
-        <Modal title="Create Segment" onClose={() => setShowCreateModal(false)}>
-          <form onSubmit={handleCreateSegment} className="space-y-4">
+        <Modal
+          title="Create Segment"
+          onClose={() => setShowCreateModal(false)}
+        >
+          <form
+            onSubmit={handleCreateSegment}
+            className="space-y-5"
+          >
             <div>
-              <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-text-dim">
+              <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.14em] text-text-dim">
                 Name
               </label>
+
               <input
                 type="text"
                 required
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="beta-testers"
-                className="w-full rounded-md border border-border bg-bg px-3 py-2 font-mono text-sm text-text placeholder-text-dim/50 focus:border-primary focus:outline-none"
+                className="w-full border border-border bg-bg px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-dim/50 focus:border-primary focus:outline-none"
               />
             </div>
 
-            {createError && <p className="text-sm text-danger">{createError}</p>}
+            {createError && (
+              <p className="text-sm text-danger">
+                {createError}
+              </p>
+            )}
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-3 border-t border-border pt-4">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="rounded-md px-4 py-2 text-sm text-text-dim transition-colors hover:text-text"
+                className="px-3 py-2 text-sm text-text-dim hover:text-text"
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="border border-primary bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-transparent hover:text-primary disabled:opacity-50"
               >
-                {creating ? 'Creating…' : 'Create Segment'}
+                {creating
+                  ? 'Creating…'
+                  : 'Create Segment'}
               </button>
             </div>
           </form>
