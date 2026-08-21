@@ -5,6 +5,7 @@ import './index.css';
 import App from './App.tsx';
 import FlagDetail from './FlagDetail.tsx';
 import Segments from './Segments.tsx';
+import SegmentDetail from './SegmentDetail.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<App />} />
         <Route path="/flags/:id" element={<FlagDetail />} />
         <Route path="/segments" element={<Segments />} />
+        <Route path="/segments/:id" element={<SegmentDetail />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

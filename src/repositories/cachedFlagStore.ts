@@ -22,7 +22,11 @@ export class CachedFlagStore implements FlagRepository {
 
   async create(input: CreateFlagInput): Promise<FlagConfig> {
     const flag = await this.inner.create(input);
-    await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    try {
+      await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    } catch {
+      console.warn('[CachedFlagStore] Redis publish failed on create, continuing without cache');
+    }
     return flag;
   }
 
@@ -31,14 +35,22 @@ export class CachedFlagStore implements FlagRepository {
   }
 
   async getByKey(key: string): Promise<FlagConfig | undefined> {
-    const cached = await this.redis.get(cacheKey(key));
-    if (cached) {
-      return JSON.parse(cached) as FlagConfig;
+    try {
+      const cached = await this.redis.get(cacheKey(key));
+      if (cached) {
+        return JSON.parse(cached) as FlagConfig;
+      }
+    } catch {
+      console.warn('[CachedFlagStore] Redis get failed, falling through to Postgres');
     }
 
     const flag = await this.inner.getByKey(key);
     if (flag) {
-      await this.redis.set(cacheKey(key), JSON.stringify(flag), 'EX', CACHE_TTL_SECONDS);
+      try {
+        await this.redis.set(cacheKey(key), JSON.stringify(flag), 'EX', CACHE_TTL_SECONDS);
+      } catch {
+        console.warn('[CachedFlagStore] Redis set failed, continuing without cache');
+      }
     }
     return flag;
   }
@@ -52,22 +64,34 @@ export class CachedFlagStore implements FlagRepository {
     changes: Partial<Pick<FlagConfig, 'description' | 'enabled' | 'defaultValue'>>
   ): Promise<FlagConfig> {
     const flag = await this.inner.update(id, changes);
-    await this.redis.del(cacheKey(flag.key));
-    await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    try {
+      await this.redis.del(cacheKey(flag.key));
+      await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    } catch {
+      console.warn('[CachedFlagStore] Redis invalidation failed on update, continuing');
+    }
     return flag;
   }
 
   async setRules(id: string, rules: TargetingRule[]): Promise<FlagConfig> {
     const flag = await this.inner.setRules(id, rules);
-    await this.redis.del(cacheKey(flag.key));
-    await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    try {
+      await this.redis.del(cacheKey(flag.key));
+      await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    } catch {
+      console.warn('[CachedFlagStore] Redis invalidation failed on setRules, continuing');
+    }
     return flag;
   }
 
   async setRollout(id: string, rollout: RolloutConfig | null): Promise<FlagConfig> {
     const flag = await this.inner.setRollout(id, rollout);
-    await this.redis.del(cacheKey(flag.key));
-    await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    try {
+      await this.redis.del(cacheKey(flag.key));
+      await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+    } catch {
+      console.warn('[CachedFlagStore] Redis invalidation failed on setRollout, continuing');
+    }
     return flag;
   }
 
@@ -75,8 +99,12 @@ export class CachedFlagStore implements FlagRepository {
     const flag = await this.inner.getById(id);
     const result = await this.inner.delete(id);
     if (flag) {
-      await this.redis.del(cacheKey(flag.key));
-      await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+      try {
+        await this.redis.del(cacheKey(flag.key));
+        await this.redis.publish(FLAG_CHANGE_CHANNEL, JSON.stringify({ key: flag.key }));
+      } catch {
+        console.warn('[CachedFlagStore] Redis invalidation failed on delete, continuing');
+      }
     }
     return result;
   }

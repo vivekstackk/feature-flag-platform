@@ -102,6 +102,18 @@ function App() {
     }
   }
 
+  async function handleDelete(flag: Flag) {
+    if (!confirm(`Delete flag "${flag.key}"? This cannot be undone.`)) return;
+
+    try {
+      const response = await apiFetch(`/flags/${flag.id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      setFlags((prev) => prev.filter((f) => f.id !== flag.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete flag');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-bg text-text">
       <div className="mx-auto max-w-5xl px-6 py-10">
@@ -143,6 +155,7 @@ function App() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-dim">
                     Updated
                   </th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -179,11 +192,19 @@ function App() {
                     <td className="px-4 py-3 text-text-dim">
                       {new Date(flag.updatedAt).toLocaleString()}
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleDelete(flag)}
+                        className="text-sm text-text-dim transition-colors hover:text-danger"
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {flags.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-text-dim">
+                    <td colSpan={5} className="px-4 py-6 text-center text-text-dim">
                       No flags yet.
                     </td>
                   </tr>

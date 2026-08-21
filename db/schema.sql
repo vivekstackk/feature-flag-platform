@@ -33,3 +33,14 @@ CREATE TABLE IF NOT EXISTS outcomes (
 
 CREATE INDEX IF NOT EXISTS idx_exposures_flag_key ON exposures(flag_key);
 CREATE INDEX IF NOT EXISTS idx_outcomes_user_id ON outcomes(user_id);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  changes JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id);

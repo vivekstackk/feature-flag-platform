@@ -60,4 +60,26 @@ export class SegmentStore {
       throw err;
     }
   }
+
+  async update(
+    id: string,
+    changes: Partial<Pick<Segment, 'name'> & { conditions: SegmentCondition[] }>
+  ): Promise<Segment> {
+    const existing = await this.pool.query<SegmentRow>('SELECT * FROM segments WHERE id = $1', [
+      id,
+    ]);
+    if (!existing.rows[0]) {
+      throw new Error(`Segment with id "${id}" not found`);
+    }
+
+    const current = rowToSegment(existing.rows[0]);
+    const newName = changes.name ?? current.name;
+    const newConditions = changes.conditions ?? current.conditions;
+
+    const result = await this.pool.query<SegmentRow>(
+      `UPDATE segments SET name = $1, conditions = $2, updated_at = now() WHERE id = $3 RETURNING *`,
+      [newName, JSON.stringify(newConditions), id]
+    );
+    return rowToSegment(result.rows[0]);
+  }
 }

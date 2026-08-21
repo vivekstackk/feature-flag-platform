@@ -11,10 +11,12 @@ import {
   RolloutConfig,
   Flag,
   CreateSegmentInput,
+  SegmentCondition,
 } from './types';
 import { evaluateFlag } from './services/evaluation';
 import { SegmentStore } from './repositories/segmentStore';
 import { ExperimentStore } from './repositories/experimentStore';
+import { AuditStore } from './repositories/auditStore';
 import { config } from './config';
 
 type FlagPatchBody = Partial<Pick<Flag, 'description' | 'enabled' | 'defaultValue'>>;
@@ -28,6 +30,8 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
   });
 
   app.addHook('preHandler', async (request, reply) => {
+    // Skip auth for health check
+    if (request.url === '/health') return;
     const providedKey = request.headers['x-api-key'];
     if (providedKey !== config.apiKey) {
       reply.code(401).send({ error: 'Unauthorized: missing or invalid API key' });
@@ -45,6 +49,7 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
   const store = new CachedFlagStore(new PgFlagStore(dbPool), redis);
   const segmentStore = new SegmentStore(dbPool);
   const experimentStore = new ExperimentStore(dbPool);
+  const auditStore = new AuditStore(dbPool);
 
   if (!redisClient) {
     app.addHook('onClose', async () => {
@@ -52,9 +57,40 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     });
   }
 
+  // --- Health Check ---
+
+  app.get('/health', async () => {
+    const checks: Record<string, string> = {};
+
+    try {
+      await dbPool.query('SELECT 1');
+      checks.postgres = 'ok';
+    } catch {
+      checks.postgres = 'error';
+    }
+
+    try {
+      await redis.ping();
+      checks.redis = 'ok';
+    } catch {
+      checks.redis = 'error';
+    }
+
+    const healthy = Object.values(checks).every((v) => v === 'ok');
+    return { status: healthy ? 'healthy' : 'degraded', checks };
+  });
+
+  // --- Flags CRUD ---
+
   app.post<{ Body: CreateFlagInput }>('/flags', async (request, reply) => {
     try {
       const flag = await store.create(request.body);
+      await auditStore.log({
+        entityType: 'flag',
+        entityId: flag.id,
+        action: 'created',
+        changes: request.body as unknown as Record<string, unknown>,
+      });
       reply.code(201).send(flag);
     } catch (err) {
       reply.code(409).send({ error: (err as Error).message });
@@ -80,6 +116,12 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     async (request, reply) => {
       try {
         const flag = await store.update(request.params.id, request.body);
+        await auditStore.log({
+          entityType: 'flag',
+          entityId: flag.id,
+          action: 'updated',
+          changes: request.body as unknown as Record<string, unknown>,
+        });
         return flag;
       } catch (err) {
         reply.code(404).send({ error: (err as Error).message });
@@ -94,8 +136,17 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
       return reply.code(404).send({ error: 'Flag not found' });
     }
 
+    await auditStore.log({
+      entityType: 'flag',
+      entityId: request.params.id,
+      action: 'deleted',
+      changes: {},
+    });
+
     reply.code(204).send();
   });
+
+  // --- Flag Evaluation ---
 
   app.post<{ Params: { key: string }; Body: UserContext }>(
     '/evaluate/:key',
@@ -124,11 +175,19 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     }
   );
 
+  // --- Rules & Rollout ---
+
   app.put<{ Params: { id: string }; Body: { rules: TargetingRule[] } }>(
     '/flags/:id/rules',
     async (request, reply) => {
       try {
         const flag = await store.setRules(request.params.id, request.body.rules);
+        await auditStore.log({
+          entityType: 'flag',
+          entityId: flag.id,
+          action: 'rules_updated',
+          changes: { rules: request.body.rules as unknown as Record<string, unknown>[] },
+        });
         return flag;
       } catch (err) {
         reply.code(404).send({ error: (err as Error).message });
@@ -141,6 +200,12 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     async (request, reply) => {
       try {
         const flag = await store.setRollout(request.params.id, request.body.rollout);
+        await auditStore.log({
+          entityType: 'flag',
+          entityId: flag.id,
+          action: 'rollout_updated',
+          changes: { rollout: request.body.rollout as unknown as Record<string, unknown> },
+        });
         return flag;
       } catch (err) {
         reply.code(404).send({ error: (err as Error).message });
@@ -148,9 +213,17 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     }
   );
 
+  // --- Segments ---
+
   app.post<{ Body: CreateSegmentInput }>('/segments', async (request, reply) => {
     try {
       const segment = await segmentStore.create(request.body);
+      await auditStore.log({
+        entityType: 'segment',
+        entityId: segment.id,
+        action: 'created',
+        changes: request.body as unknown as Record<string, unknown>,
+      });
       reply.code(201).send(segment);
     } catch (err) {
       reply.code(409).send({ error: (err as Error).message });
@@ -161,13 +234,48 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
     return segmentStore.getAll();
   });
 
+  app.get<{ Params: { id: string } }>('/segments/:id', async (request, reply) => {
+    const segments = await segmentStore.getAll();
+    const segment = segments.find((s) => s.id === request.params.id);
+    if (!segment) {
+      return reply.code(404).send({ error: 'Segment not found' });
+    }
+    return segment;
+  });
+
+  app.put<{ Params: { id: string }; Body: { name?: string; conditions?: SegmentCondition[] } }>(
+    '/segments/:id',
+    async (request, reply) => {
+      try {
+        const segment = await segmentStore.update(request.params.id, request.body);
+        await auditStore.log({
+          entityType: 'segment',
+          entityId: segment.id,
+          action: 'updated',
+          changes: request.body as unknown as Record<string, unknown>,
+        });
+        return segment;
+      } catch (err) {
+        reply.code(404).send({ error: (err as Error).message });
+      }
+    }
+  );
+
   app.delete<{ Params: { id: string } }>('/segments/:id', async (request, reply) => {
     const deleted = await segmentStore.delete(request.params.id);
     if (!deleted) {
       return reply.code(404).send({ error: 'Segment not found' });
     }
+    await auditStore.log({
+      entityType: 'segment',
+      entityId: request.params.id,
+      action: 'deleted',
+      changes: {},
+    });
     reply.code(204).send();
   });
+
+  // --- Experiments ---
 
   app.post<{ Body: { userId: string; eventName: string } }>('/outcomes', async (request, reply) => {
     await experimentStore.logOutcome(request.body);
@@ -183,6 +291,21 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
       return experimentStore.getStats(request.params.key, request.query.event);
     }
   );
+
+  // --- Audit Log ---
+
+  app.get<{ Params: { entityType: string; entityId: string } }>(
+    '/audit-log/:entityType/:entityId',
+    async (request) => {
+      return auditStore.getByEntity(request.params.entityType, request.params.entityId);
+    }
+  );
+
+  app.get('/audit-log', async () => {
+    return auditStore.getAll(50);
+  });
+
+  // --- SSE Stream ---
 
   app.get('/stream', async (request, reply) => {
     reply.hijack();

@@ -133,7 +133,11 @@ function Segments() {
                     key={segment.id}
                     className="border-b border-border last:border-none hover:bg-surface-high"
                   >
-                    <td className="px-4 py-3 font-mono text-text">{segment.name}</td>
+                    <td className="px-4 py-3 font-mono text-text">
+                      <Link to={`/segments/${segment.id}`} className="hover:text-primary hover:underline">
+                        {segment.name}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-text-dim">{segment.conditions.length}</td>
                     <td className="px-4 py-3 text-text-dim">
                       {new Date(segment.updatedAt).toLocaleString()}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from './api';
 
 interface TargetingRule {
@@ -16,6 +16,13 @@ interface VariantStats {
   conversionRate: number;
 }
 
+interface AuditEntry {
+  id: string;
+  action: string;
+  changes: Record<string, unknown>;
+  createdAt: string;
+}
+
 interface Flag {
   id: string;
   key: string;
@@ -30,6 +37,7 @@ interface Flag {
 
 function FlagDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [flag, setFlag] = useState<Flag | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +55,8 @@ function FlagDetail() {
   const [loadingStats, setLoadingStats] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
 
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+
   useEffect(() => {
     fetchFlag();
   }, [id]);
@@ -61,6 +71,13 @@ function FlagDetail() {
       setRolloutPercentage(data.rollout?.percentage ?? 0);
       setRules(data.rules ?? []);
       setError(null);
+
+      // Fetch audit log
+      const auditResponse = await apiFetch(`/audit-log/flag/${id}`);
+      if (auditResponse.ok) {
+        const auditData = await auditResponse.json();
+        setAuditLog(auditData);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load flag');
     } finally {
@@ -151,6 +168,19 @@ function FlagDetail() {
     }
   }
 
+  async function handleDeleteFlag() {
+    if (!flag) return;
+    if (!confirm(`Delete flag "${flag.key}"? This cannot be undone.`)) return;
+
+    try {
+      const response = await apiFetch(`/flags/${flag.id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete flag');
+    }
+  }
+
   if (loading) return <div className="p-10 text-text-dim">Loading…</div>;
   if (error) return <div className="p-10 text-danger">Error: {error}</div>;
   if (!flag) return null;
@@ -163,18 +193,26 @@ function FlagDetail() {
         </Link>
 
         <header className="mb-8">
-          <div className="flex items-center gap-3">
-            <h1 className="font-mono text-2xl font-semibold">{flag.key}</h1>
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                flag.enabled ? 'bg-success/15 text-success' : 'bg-text-dim/15 text-text-dim'
-              }`}
-            >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="font-mono text-2xl font-semibold">{flag.key}</h1>
               <span
-                className={`h-1.5 w-1.5 rounded-full ${flag.enabled ? 'bg-success' : 'bg-text-dim'}`}
-              />
-              {flag.enabled ? 'Enabled' : 'Disabled'}
-            </span>
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  flag.enabled ? 'bg-success/15 text-success' : 'bg-text-dim/15 text-text-dim'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${flag.enabled ? 'bg-success' : 'bg-text-dim'}`}
+                />
+                {flag.enabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <button
+              onClick={handleDeleteFlag}
+              className="rounded-md border border-danger/30 px-3 py-1.5 text-sm text-danger transition-colors hover:bg-danger hover:text-white"
+            >
+              Delete Flag
+            </button>
           </div>
           {flag.description && <p className="mt-2 text-sm text-text-dim">{flag.description}</p>}
         </header>
@@ -382,6 +420,31 @@ function FlagDetail() {
               ))}
             </div>
           )}
+        </section>
+
+        <section className="mt-6 rounded-lg border border-border bg-surface p-6">
+          <h2 className="mb-4 text-lg font-semibold">Activity Log</h2>
+          {auditLog.length === 0 && (
+            <p className="text-sm text-text-dim">No activity recorded yet.</p>
+          )}
+          <div className="space-y-2">
+            {auditLog.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-start justify-between rounded-md border border-border bg-bg p-3"
+              >
+                <div>
+                  <span className="text-sm font-medium text-text">{entry.action}</span>
+                  <p className="mt-0.5 font-mono text-xs text-text-dim">
+                    {JSON.stringify(entry.changes, null, 0).slice(0, 120)}
+                  </p>
+                </div>
+                <span className="whitespace-nowrap text-xs text-text-dim">
+                  {new Date(entry.createdAt).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </div>
