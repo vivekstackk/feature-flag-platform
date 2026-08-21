@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Modal } from './Modal';
 import { apiFetch } from './api';
 
@@ -15,8 +15,6 @@ interface FeatureFlag {
 
 function App() {
   const location = useLocation();
-  const navigate = useNavigate();
-
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
