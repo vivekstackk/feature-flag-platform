@@ -181,6 +181,28 @@ function FlagDetail() {
     }
   }
 
+  const hasUnsavedChanges = !rolloutSaved || !rulesSaved;
+  const [savingAll, setSavingAll] = useState(false);
+
+  async function handleSaveAll() {
+    if (!flag) return;
+    setSavingAll(true);
+    setError(null);
+
+    try {
+      if (!rolloutSaved) {
+        await handleSaveRollout();
+      }
+      if (!rulesSaved) {
+        await handleSaveRules();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+    } finally {
+      setSavingAll(false);
+    }
+  }
+
   if (loading) return <div className="p-10 text-text-dim">Loading…</div>;
   if (error) return <div className="p-10 text-danger">Error: {error}</div>;
   if (!flag) return null;
@@ -207,12 +229,23 @@ function FlagDetail() {
                 {flag.enabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
-            <button
-              onClick={handleDeleteFlag}
-              className="rounded-md border border-danger/30 px-3 py-1.5 text-sm text-danger transition-colors hover:bg-danger hover:text-white"
-            >
-              Delete Flag
-            </button>
+            <div className="flex items-center gap-2">
+              {hasUnsavedChanges && (
+                <button
+                  onClick={handleSaveAll}
+                  disabled={savingAll}
+                  className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {savingAll ? 'Saving…' : 'Save All Changes'}
+                </button>
+              )}
+              <button
+                onClick={handleDeleteFlag}
+                className="rounded-md border border-danger/30 px-3 py-1.5 text-sm text-danger transition-colors hover:bg-danger hover:text-white"
+              >
+                Delete Flag
+              </button>
+            </div>
           </div>
           {flag.description && <p className="mt-2 text-sm text-text-dim">{flag.description}</p>}
         </header>
