@@ -3,74 +3,73 @@ import { Link } from 'react-router-dom';
 const features = [
   {
     number: '01',
-    title: 'Targeting rules',
+    title: 'Targeting',
     description:
-      'Evaluate users against attributes, cohorts and reusable segments. Rules are resolved deterministically, in order.',
-    detail: 'equals · in · contains · inSegment',
+      'Control who receives a feature using flexible targeting rules and reusable segments.',
   },
   {
     number: '02',
-    title: 'Controlled rollouts',
+    title: 'Rollouts',
     description:
-      'Gradually expose a feature from 1% to 100% using deterministic SHA-256 bucketing. The same user gets the same result.',
-    detail: '1% → 100% · deterministic',
+      'Release changes gradually with deterministic percentage rollouts.',
   },
   {
     number: '03',
     title: 'Experiments',
     description:
-      'Assign variants, record exposures and measure conversions without adding another analytics dependency to your application.',
-    detail: 'exposure · conversion · variants',
+      'Run controlled A/B experiments with variants, exposures and conversions.',
   },
   {
     number: '04',
-    title: 'Live propagation',
+    title: 'Real-time updates',
     description:
-      'Changes move through Redis Pub/Sub and SSE to connected SDK clients. No polling loop sitting between your application and a flag.',
-    detail: 'Redis Pub/Sub · SSE',
-  },
-  {
-    number: '05',
-    title: 'Reusable segments',
-    description:
-      'Define a cohort once and reference it from multiple flags. Keep targeting logic centralized instead of duplicating conditions.',
-    detail: 'one definition · many flags',
-  },
-  {
-    number: '06',
-    title: 'Local evaluation',
-    description:
-      'The SDK fetches configuration once and evaluates locally. Feature checks stay fast and do not require a network request.',
-    detail: 'local · cached · resilient',
+      'Push configuration changes to connected applications without polling.',
   },
 ];
 
 const stack = [
-  { name: 'Fastify', role: 'API', description: 'HTTP + SSE' },
-  { name: 'PostgreSQL', role: 'Storage', description: 'Persistent state' },
-  { name: 'Redis', role: 'Realtime', description: 'Cache + Pub/Sub' },
-  { name: 'React', role: 'Console', description: 'Vite dashboard' },
+  {
+    name: 'Fastify',
+    description: 'API layer',
+  },
+  {
+    name: 'PostgreSQL',
+    description: 'Persistent storage',
+  },
+  {
+    name: 'Redis',
+    description: 'Cache + realtime',
+  },
+  {
+    name: 'React',
+    description: 'Developer console',
+  },
 ];
 
 function Landing() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg text-text">
+
       {/* Navigation */}
-      <header className="border-b border-border/70">
-        <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3">
-            <span className="flex h-7 w-7 items-center justify-center border border-border bg-surface">
+      <header className="sticky top-0 z-40 border-b border-white/[0.045] bg-bg/85 backdrop-blur-xl">
+        <nav className="mx-auto flex h-[68px] max-w-[1180px] items-center justify-between px-5 sm:px-7 lg:px-8">
+
+          <Link
+            to="/"
+            className="flex items-center gap-3"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-surface-high shadow-[inset_0_1px_rgba(255,255,255,0.05)]">
               <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
                 fill="none"
                 aria-hidden="true"
               >
                 <path
-                  d="M3 7.2L5.6 9.8L11 4.2"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
+                  d="M3.5 8.2L6.4 11L12.5 4.8"
+                  stroke="#4F8CFF"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -82,19 +81,20 @@ function Landing() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-5">
+
             <a
               href="https://github.com/vivekstackk/feature-flag-platform"
               target="_blank"
               rel="noreferrer"
-              className="hidden text-sm text-text-dim transition-colors hover:text-text sm:block"
+              className="hidden rounded-xl px-3 py-2 text-sm text-text-dim transition-colors hover:bg-surface hover:text-text sm:block"
             >
               GitHub
             </a>
 
             <Link
               to="/dashboard"
-              className="border border-primary bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-transparent hover:text-primary"
+              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-[0_5px_20px_rgba(63,134,255,0.18)] transition-all hover:bg-[#4a8dff] active:scale-[0.98]"
             >
               Open dashboard
             </Link>
@@ -103,481 +103,459 @@ function Landing() {
       </header>
 
       <main>
+
         {/* Hero */}
-        <section className="relative border-b border-border/70">
-          <div className="mx-auto grid max-w-7xl grid-cols-1 px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
-            <div className="flex min-h-[620px] flex-col justify-center py-24 lg:border-r lg:border-border/70 lg:pr-20">
-              <div className="mb-8 flex items-center gap-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim">
-                  Open source / Self hosted
+        <section className="relative">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-[650px] w-[900px] -translate-x-1/2 bg-[radial-gradient(circle,rgba(63,134,255,0.075),transparent_65%)]" />
+
+          <div className="relative mx-auto max-w-[1180px] px-5 pb-24 pt-20 sm:px-7 sm:pt-28 lg:px-8 lg:pb-32 lg:pt-32">
+
+            <div className="mx-auto max-w-[850px] text-center">
+
+              <div className="mx-auto mb-7 flex w-fit items-center gap-2 rounded-full border border-white/[0.06] bg-surface/80 px-3.5 py-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(53,201,139,0.5)]" />
+
+                <span className="text-[11px] font-medium text-text-dim">
+                  Open source · Self hosted · Production ready
                 </span>
               </div>
 
-              <h1 className="max-w-4xl text-[clamp(3.4rem,7vw,6.8rem)] font-semibold leading-[0.92] tracking-[-0.065em]">
+              <h1 className="text-[clamp(3.2rem,8vw,6.8rem)] font-semibold leading-[0.92] tracking-[-0.065em]">
                 Ship features
                 <br />
-                <span className="text-primary">with confidence.</span>
+                <span className="text-primary">
+                  without the fear.
+                </span>
               </h1>
 
-              <p className="mt-9 max-w-xl text-[17px] leading-8 text-text-dim">
-                A feature flag platform built for engineers who want
-                targeting, controlled rollouts and real-time configuration
-                without handing their application to another SDK.
+              <p className="mx-auto mt-8 max-w-[650px] text-[16px] leading-7 text-text-dim sm:text-[18px] sm:leading-8">
+                A complete feature flag platform for targeting,
+                controlled rollouts, experiments and real-time
+                configuration. Built from scratch for developers.
               </p>
 
-              <div className="mt-10 flex flex-wrap items-center gap-3">
+              <div className="mt-9 flex flex-wrap justify-center gap-3">
+
                 <Link
                   to="/dashboard"
-                  className="group inline-flex items-center gap-3 border border-primary bg-primary px-5 py-3 text-sm font-medium text-white transition-all hover:bg-transparent hover:text-primary"
+                  className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-[0_7px_25px_rgba(63,134,255,0.2)] transition-all hover:bg-[#4a8dff] active:scale-[0.98]"
                 >
-                  Launch dashboard
-                  <span className="transition-transform group-hover:translate-x-1">
-                    →
-                  </span>
+                  Launch dashboard →
                 </Link>
 
                 <a
                   href="https://github.com/vivekstackk/feature-flag-platform"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 border border-border px-5 py-3 text-sm font-medium text-text-dim transition-colors hover:border-text-dim hover:text-text"
+                  className="rounded-xl border border-white/[0.07] bg-surface px-5 py-3 text-sm font-medium text-text-dim transition-all hover:bg-surface-high hover:text-text"
                 >
                   View source
                 </a>
               </div>
-
-              <div className="mt-14 flex flex-wrap gap-x-8 gap-y-3 border-t border-border/70 pt-5">
-                <span className="font-mono text-[11px] text-text-dim">
-                  TypeScript
-                </span>
-                <span className="font-mono text-[11px] text-text-dim">
-                  PostgreSQL
-                </span>
-                <span className="font-mono text-[11px] text-text-dim">
-                  Redis
-                </span>
-                <span className="font-mono text-[11px] text-text-dim">
-                  Fastify
-                </span>
-                <span className="font-mono text-[11px] text-text-dim">
-                  React
-                </span>
-              </div>
             </div>
 
-            {/* Code panel */}
-            <div className="flex items-center py-16 lg:pl-16">
-              <div className="w-full border border-border bg-surface">
-                <div className="flex h-11 items-center justify-between border-b border-border px-4">
+            {/* Product preview */}
+            <div className="relative mx-auto mt-20 max-w-[1030px]">
+
+              <div className="absolute -inset-10 -z-10 bg-[radial-gradient(circle_at_center,rgba(63,134,255,0.10),transparent_60%)] blur-2xl" />
+
+              <div className="overflow-hidden rounded-[22px] border border-white/[0.07] bg-surface shadow-[0_30px_100px_rgba(0,0,0,0.45)]">
+
+                {/* Window top */}
+                <div className="flex h-12 items-center justify-between border-b border-white/[0.055] px-5">
+
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-danger/70" />
-                    <span className="h-2 w-2 rounded-full bg-warning/70" />
-                    <span className="h-2 w-2 rounded-full bg-success/70" />
+                    <span className="h-2 w-2 rounded-full bg-[#ef6262]" />
+                    <span className="h-2 w-2 rounded-full bg-[#d9a441]" />
+                    <span className="h-2 w-2 rounded-full bg-[#35c98b]" />
                   </div>
 
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">
                     evaluate.ts
                   </span>
+
+                  <div className="w-12" />
                 </div>
 
-                <div className="border-b border-border/70 bg-bg px-5 py-3">
-                  <span className="font-mono text-[10px] text-text-dim">
-                    SDK / LOCAL EVALUATION
-                  </span>
-                </div>
+                <div className="grid min-h-[430px] lg:grid-cols-[0.7fr_1.3fr]">
 
-                <pre className="overflow-x-auto p-6 font-mono text-[12px] leading-[2] sm:text-[13px]">
-                  <code>
-                    <span className="text-text-dim">
-                      {'// no network call per evaluation'}
-                    </span>
-                    {'\n\n'}
-                    <span className="text-primary">import</span>
-                    {' { FeatureFlagClient } '}
-                    <span className="text-primary">from</span>
-                    {' '}
-                    <span className="text-success">
-                      {'"./sdk"'}
-                    </span>
-                    {';\n\n'}
-                    <span className="text-primary">const</span>
-                    {' client = '}
-                    <span className="text-primary">new</span>
-                    {' FeatureFlagClient({\n'}
-                    {'  baseUrl: '}
-                    <span className="text-success">
-                      {'"https://api.flagwise.dev"'}
-                    </span>
-                    {',\n'}
-                    {'});\n\n'}
-                    <span className="text-primary">await</span>
-                    {' client.'}
-                    <span className="text-warning">start</span>
-                    {'();\n\n'}
-                    <span className="text-primary">const</span>
-                    {' enabled = client.'}
-                    <span className="text-warning">evaluate</span>
-                    {'(\n'}
-                    {'  '}
-                    <span className="text-success">
-                      {'"new-checkout"'}
-                    </span>
-                    {',\n'}
-                    {'  { userId: '}
-                    <span className="text-success">
-                      {'"user-42"'}
-                    </span>
-                    {',\n'}
-                    {'    attributes: { plan: '}
-                    <span className="text-success">
-                      {'"pro"'}
-                    </span>
-                    {' }\n'}
-                    {'  }\n'}
-                    {');\n\n'}
-                    <span className="text-text-dim">
-                      {'// → true'}
-                    </span>
-                  </code>
-                </pre>
+                  {/* Mini dashboard */}
+                  <div className="hidden border-r border-white/[0.055] bg-[#101114] p-7 lg:block">
 
-                <div className="flex items-center justify-between border-t border-border bg-bg px-5 py-3">
-                  <span className="font-mono text-[10px] text-text-dim">
-                    evaluation
-                  </span>
-                  <span className="font-mono text-[10px] text-success">
-                    local · deterministic
-                  </span>
+                    <div className="mb-7 flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] text-text-muted">
+                          Project
+                        </p>
+
+                        <p className="mt-1 text-sm font-medium">
+                          Production
+                        </p>
+                      </div>
+
+                      <span className="h-2 w-2 rounded-full bg-success" />
+                    </div>
+
+                    <div className="rounded-[15px] bg-surface p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] text-text-muted">
+                          FEATURE
+                        </span>
+
+                        <span className="rounded-full bg-success/10 px-2 py-1 text-[9px] text-success">
+                          ENABLED
+                        </span>
+                      </div>
+
+                      <p className="mt-4 font-mono text-sm">
+                        new-checkout
+                      </p>
+
+                      <div className="mt-5 h-2 overflow-hidden rounded-full bg-surface-high">
+                        <div className="h-full w-[72%] rounded-full bg-primary" />
+                      </div>
+
+                      <div className="mt-2 flex justify-between text-[10px] text-text-muted">
+                        <span>Rollout</span>
+                        <span>72%</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+
+                      <div className="rounded-[15px] bg-surface p-4">
+                        <p className="text-[10px] text-text-muted">
+                          Flags
+                        </p>
+
+                        <p className="mt-2 text-xl font-semibold">
+                          24
+                        </p>
+                      </div>
+
+                      <div className="rounded-[15px] bg-surface p-4">
+                        <p className="text-[10px] text-text-muted">
+                          Segments
+                        </p>
+
+                        <p className="mt-2 text-xl font-semibold">
+                          08
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Code */}
+                  <div className="bg-[#101114]">
+
+                    <div className="border-b border-white/[0.055] px-6 py-4">
+                      <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-text-muted">
+                        SDK / Local evaluation
+                      </span>
+                    </div>
+
+                    <pre className="overflow-x-auto p-6 font-mono text-[12px] leading-[2.05] sm:p-8 sm:text-[13px]">
+                      <code>
+                        <span className="text-text-muted">
+                          {'// Evaluate locally. No network call.'}
+                        </span>
+                        {'\n\n'}
+
+                        <span className="text-primary">
+                          import
+                        </span>{' '}
+                        {'{ FeatureFlagClient } '}
+                        <span className="text-primary">
+                          from
+                        </span>{' '}
+                        <span className="text-success">
+                          '"./sdk"'
+                        </span>
+                        {';\n\n'}
+
+                        <span className="text-primary">
+                          const
+                        </span>{' '}
+                        client ={' '}
+                        <span className="text-primary">
+                          new
+                        </span>{' '}
+                        FeatureFlagClient({'{\n'}
+                        {'  baseUrl: '}
+                        <span className="text-success">
+                          '"https://api.flagwise.dev"'
+                        </span>
+                        {',\n'}
+                        {'});\n\n'}
+
+                        <span className="text-primary">
+                          await
+                        </span>{' '}
+                        client.
+                        <span className="text-warning">
+                          start
+                        </span>
+                        {'();\n\n'}
+
+                        <span className="text-primary">
+                          const
+                        </span>{' '}
+                        enabled = client.
+                        <span className="text-warning">
+                          evaluate
+                        </span>
+                        {'(\n'}
+
+                        {'  '}
+                        <span className="text-success">
+                          '"new-checkout"'
+                        </span>
+                        {',\n'}
+
+                        {'  { userId: '}
+                        <span className="text-success">
+                          '"user-42"'
+                        </span>
+                        {',\n'}
+
+                        {'    attributes: { plan: '}
+                        <span className="text-success">
+                          '"pro"'
+                        </span>
+                        {' }\n'}
+
+                        {'  }\n'}
+
+                        {');\n\n'}
+
+                        <span className="text-text-muted">
+                          {'// → true'}
+                        </span>
+                      </code>
+                    </pre>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Positioning strip */}
-        <section className="border-b border-border/70">
-          <div className="mx-auto grid max-w-7xl grid-cols-1 px-6 sm:grid-cols-3 lg:px-8">
-            <div className="border-b border-border/70 px-0 py-7 sm:border-b-0 sm:border-r sm:pr-8">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
-                Evaluate
-              </p>
-              <p className="mt-2 text-sm font-medium">
-                Rules run where your code runs.
+        {/* Product principles */}
+        <section className="mx-auto max-w-[1180px] px-5 pb-24 sm:px-7 lg:px-8 lg:pb-32">
+
+          <div className="grid gap-4 sm:grid-cols-3">
+
+            <div className="rounded-[20px] border border-white/[0.05] bg-surface p-6 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+              <div className="mb-7 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                ⚡
+              </div>
+
+              <h3 className="text-base font-semibold">
+                Evaluate locally
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-text-dim">
+                Feature checks happen inside your application.
+                No network request on every evaluation.
               </p>
             </div>
 
-            <div className="border-b border-border/70 py-7 sm:border-b-0 sm:px-8 sm:border-r">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
-                Control
-              </p>
-              <p className="mt-2 text-sm font-medium">
-                Roll out changes deliberately.
+            <div className="rounded-[20px] border border-white/[0.05] bg-surface p-6 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+              <div className="mb-7 flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success">
+                ↗
+              </div>
+
+              <h3 className="text-base font-semibold">
+                Release gradually
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-text-dim">
+                Move from internal testing to a percentage rollout
+                without touching application code.
               </p>
             </div>
 
-            <div className="py-7 sm:pl-8">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
-                Observe
-              </p>
-              <p className="mt-2 text-sm font-medium">
-                Know exactly what changed.
+            <div className="rounded-[20px] border border-white/[0.05] bg-surface p-6 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+              <div className="mb-7 flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning">
+                ◉
+              </div>
+
+              <h3 className="text-base font-semibold">
+                Stay in control
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-text-dim">
+                Self-host your configuration and keep your
+                application's release controls in your hands.
               </p>
             </div>
+
           </div>
         </section>
 
         {/* Features */}
-        <section className="mx-auto max-w-7xl px-6 py-28 lg:px-8">
-          <div className="grid gap-16 lg:grid-cols-[0.32fr_0.68fr]">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
-                Capabilities
+        <section className="border-y border-white/[0.045] bg-[#0c0d10]">
+
+          <div className="mx-auto max-w-[1180px] px-5 py-24 sm:px-7 lg:px-8 lg:py-32">
+
+            <div className="max-w-xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-primary">
+                Built for releases
               </p>
 
-              <h2 className="mt-5 max-w-xs text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">
-                The control layer between code and release.
+              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                Everything you need to ship safely.
               </h2>
 
-              <p className="mt-6 max-w-sm text-sm leading-7 text-text-dim">
-                Keep feature delivery separate from deployment. Change
-                behaviour without rebuilding the application.
+              <p className="mt-4 text-sm leading-7 text-text-dim sm:text-base">
+                A focused feature management layer without the
+                unnecessary complexity of a large platform.
               </p>
             </div>
 
-            <div className="border-t border-border">
+            <div className="mt-12 grid gap-4 sm:grid-cols-2">
+
               {features.map((feature) => (
                 <div
                   key={feature.number}
-                  className="group grid gap-5 border-b border-border py-7 transition-colors hover:bg-surface/50 sm:grid-cols-[48px_0.8fr_1.2fr] sm:items-start"
+                  className="group rounded-[20px] border border-white/[0.05] bg-surface p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.08] hover:bg-surface-high"
                 >
-                  <span className="font-mono text-[11px] text-text-dim">
-                    {feature.number}
-                  </span>
 
-                  <h3 className="text-base font-medium tracking-[-0.01em]">
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-high font-mono text-[10px] text-text-muted">
+                      {feature.number}
+                    </span>
+
+                    <span className="text-lg text-text-muted transition-colors group-hover:text-primary">
+                      →
+                    </span>
+                  </div>
+
+                  <h3 className="mt-8 text-lg font-semibold tracking-[-0.02em]">
                     {feature.title}
                   </h3>
 
-                  <div>
-                    <p className="max-w-lg text-sm leading-6 text-text-dim">
-                      {feature.description}
-                    </p>
-
-                    <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-primary/80">
-                      {feature.detail}
-                    </p>
-                  </div>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-text-dim">
+                    {feature.description}
+                  </p>
                 </div>
               ))}
+
             </div>
           </div>
         </section>
 
         {/* Architecture */}
-        <section className="border-y border-border/70 bg-surface/30">
-          <div className="mx-auto max-w-7xl px-6 py-28 lg:px-8">
-            <div className="flex flex-col justify-between gap-8 border-b border-border pb-10 sm:flex-row sm:items-end">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
-                  Architecture
-                </p>
+        <section className="mx-auto max-w-[1180px] px-5 py-24 sm:px-7 lg:px-8 lg:py-32">
 
-                <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-                  Small system. Clear boundaries.
-                </h2>
-              </div>
+          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
 
-              <p className="max-w-md text-sm leading-6 text-text-dim">
-                Each component has a narrow responsibility: persistence,
-                caching, transport, evaluation and the developer console.
-              </p>
-            </div>
-
-            <div className="grid border-l border-border sm:grid-cols-2 lg:grid-cols-4">
-              {stack.map((item) => (
-                <div
-                  key={item.name}
-                  className="min-h-[190px] border-b border-r border-border p-7 lg:border-b-0"
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="font-mono text-[10px] text-text-dim">
-                      {item.role}
-                    </span>
-
-                    <span className="font-mono text-[10px] text-text-dim">
-                      /0{stack.indexOf(item) + 1}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-12 text-lg font-medium tracking-[-0.02em]">
-                    {item.name}
-                  </h3>
-
-                  <p className="mt-2 text-xs text-text-dim">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 grid border border-border sm:grid-cols-3">
-              <div className="border-b border-border p-7 sm:border-b-0 sm:border-r">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-                  Test suite
-                </span>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                  60
-                </p>
-                <p className="mt-1 text-xs text-text-dim">passing tests</p>
-              </div>
-
-              <div className="border-b border-border p-7 sm:border-b-0 sm:border-r">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-                  Evaluation
-                </span>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                  &lt;1ms
-                </p>
-                <p className="mt-1 text-xs text-text-dim">local evaluation</p>
-              </div>
-
-              <div className="p-7">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-                  Propagation
-                </span>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                  ~1s
-                </p>
-                <p className="mt-1 text-xs text-text-dim">via SSE</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Observability */}
-        <section className="mx-auto max-w-7xl px-6 py-28 lg:px-8">
-          <div className="grid gap-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
-                Observability
+              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-primary">
+                Architecture
               </p>
 
-              <h2 className="mt-5 max-w-md text-3xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">
-                Changes should leave a trail.
+              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                Simple under the hood.
               </h2>
-
-              <p className="mt-6 max-w-md text-sm leading-7 text-text-dim">
-                Every mutation is recorded. Health checks expose dependency
-                state, while Redis failures gracefully fall back to
-                PostgreSQL.
-              </p>
-
-              <div className="mt-8 space-y-3">
-                {[
-                  'Audit log on every mutation',
-                  'Unauthenticated health endpoint',
-                  'Graceful Redis degradation',
-                  'Self-healing keep-alive',
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-3">
-                    <span className="flex h-4 w-4 items-center justify-center border border-success/40 text-success">
-                      <svg
-                        width="9"
-                        height="9"
-                        viewBox="0 0 9 9"
-                        fill="none"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M1.5 4.5L3.5 6.5L7.5 2.5"
-                          stroke="currentColor"
-                          strokeWidth="1.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </span>
-
-                    <span className="text-sm">{item}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
-            <div className="border border-border bg-surface">
-              <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-                  GET /health
-                </span>
+            <p className="max-w-md text-sm leading-6 text-text-dim">
+              Each part of Flagwise has a focused responsibility,
+              keeping the system understandable and easy to operate.
+            </p>
+          </div>
 
-                <span className="flex items-center gap-2 font-mono text-[10px] text-success">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+            {stack.map((item, index) => (
+              <div
+                key={item.name}
+                className="rounded-[20px] border border-white/[0.05] bg-surface p-6"
+              >
+
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-text-muted">
+                    0{index + 1}
+                  </span>
+
                   <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                  healthy
-                </span>
-              </div>
-
-              <pre className="overflow-x-auto p-6 font-mono text-xs leading-7 sm:text-sm">
-                <code>
-                  {'{\n'}
-                  {'  '}
-                  <span className="text-primary">"status"</span>
-                  {': '}
-                  <span className="text-success">"healthy"</span>
-                  {',\n'}
-                  {'  '}
-                  <span className="text-primary">"checks"</span>
-                  {': {\n'}
-                  {'    '}
-                  <span className="text-primary">"postgres"</span>
-                  {': '}
-                  <span className="text-success">"ok"</span>
-                  {',\n'}
-                  {'    '}
-                  <span className="text-primary">"redis"</span>
-                  {': '}
-                  <span className="text-success">"ok"</span>
-                  {'\n'}
-                  {'  }\n'}
-                  {'}'}
-                </code>
-              </pre>
-
-              <div className="grid border-t border-border sm:grid-cols-2">
-                <div className="border-b border-border p-5 sm:border-b-0 sm:border-r">
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-                    PostgreSQL
-                  </p>
-                  <p className="mt-2 text-sm text-success">operational</p>
                 </div>
 
-                <div className="p-5">
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-                    Redis
-                  </p>
-                  <p className="mt-2 text-sm text-success">operational</p>
-                </div>
+                <h3 className="mt-10 text-lg font-semibold">
+                  {item.name}
+                </h3>
+
+                <p className="mt-1 text-sm text-text-dim">
+                  {item.description}
+                </p>
               </div>
-            </div>
+            ))}
+
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto max-w-7xl px-6 py-28 lg:px-8">
-            <div className="flex flex-col justify-between gap-10 sm:flex-row sm:items-end">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
-                  Ready when you are
+        {/* CTA */}
+        <section className="mx-auto max-w-[1180px] px-5 pb-24 sm:px-7 lg:px-8 lg:pb-32">
+
+          <div className="relative overflow-hidden rounded-[26px] border border-white/[0.06] bg-surface p-8 shadow-[0_25px_80px_rgba(0,0,0,0.25)] sm:p-12 lg:p-16">
+
+            <div className="pointer-events-none absolute right-[-100px] top-[-150px] h-[400px] w-[400px] rounded-full bg-primary/10 blur-[100px]" />
+
+            <div className="relative flex flex-col justify-between gap-10 lg:flex-row lg:items-end">
+
+              <div className="max-w-2xl">
+
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-primary">
+                  Ready to ship?
                 </p>
 
-                <h2 className="mt-5 max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.05em] sm:text-5xl">
-                  Put releases behind a switch.
+                <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-5xl">
+                  Put your next release behind a flag.
                 </h2>
 
-                <p className="mt-5 max-w-lg text-sm leading-7 text-text-dim">
-                  Create a flag, define targeting, and watch configuration
-                  propagate through the system in real time.
+                <p className="mt-4 max-w-lg text-sm leading-7 text-text-dim sm:text-base">
+                  Create a flag, define your targeting and control
+                  the rollout from one place.
                 </p>
               </div>
 
-              <div className="flex shrink-0 flex-wrap gap-3">
-                <Link
-                  to="/dashboard"
-                  className="border border-primary bg-primary px-5 py-3 text-sm font-medium text-white transition-all hover:bg-transparent hover:text-primary"
-                >
-                  Open dashboard →
-                </Link>
+              <Link
+                to="/dashboard"
+                className="w-fit shrink-0 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_25px_rgba(63,134,255,0.2)] transition-all hover:bg-[#4a8dff] active:scale-[0.98]"
+              >
+                Open dashboard →
+              </Link>
 
-                <a
-                  href="https://github.com/vivekstackk/feature-flag-platform"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="border border-border px-5 py-3 text-sm font-medium text-text-dim transition-colors hover:border-text-dim hover:text-text"
-                >
-                  GitHub
-                </a>
-              </div>
             </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-7 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
-            Flagwise · 2026
-          </span>
+      <footer className="border-t border-white/[0.045]">
+
+        <div className="mx-auto flex max-w-[1180px] flex-col gap-4 px-5 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-7 lg:px-8">
+
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-high">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+
+            <span className="text-xs font-medium text-text-dim">
+              Flagwise
+            </span>
+          </div>
 
           <a
             href="https://github.com/vivekstackk/feature-flag-platform"
             target="_blank"
             rel="noreferrer"
-            className="font-mono text-[10px] text-text-dim transition-colors hover:text-text"
+            className="text-xs text-text-muted transition-colors hover:text-text"
           >
-            github.com/vivekstackk/feature-flag-platform
+            GitHub
           </a>
+
         </div>
       </footer>
     </div>
