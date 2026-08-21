@@ -9,7 +9,10 @@ interface Flag {
   description: string;
   enabled: boolean;
   defaultValue: boolean;
-  rollout: { percentage: number; serveValue: boolean } | null;
+  rollout: {
+    percentage: number;
+    serveValue: boolean;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,10 +42,16 @@ function App() {
         throw new Error(`Request failed: ${response.status}`);
       }
 
-      setFlags(await response.json());
+      const data = await response.json();
+
+      setFlags(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load flags');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to load flags'
+      );
     } finally {
       setLoading(false);
     }
@@ -50,13 +59,16 @@ function App() {
 
   async function handleCreateFlag(e: React.FormEvent) {
     e.preventDefault();
+
     setCreating(true);
     setCreateError(null);
 
     try {
       const response = await apiFetch('/flags', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           key: newKey,
           description: newDescription,
@@ -65,14 +77,19 @@ function App() {
 
       if (response.status === 409) {
         const body = await response.json();
+
         setCreateError(
-          body.error ?? 'A flag with that key already exists'
+          body.error ??
+            'A flag with that key already exists'
         );
+
         return;
       }
 
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
       }
 
       setNewKey('');
@@ -82,7 +99,9 @@ function App() {
       await fetchFlags();
     } catch (err) {
       setCreateError(
-        err instanceof Error ? err.message : 'Failed to create flag'
+        err instanceof Error
+          ? err.message
+          : 'Failed to create flag'
       );
     } finally {
       setCreating(false);
@@ -101,14 +120,23 @@ function App() {
     );
 
     try {
-      const response = await apiFetch(`/flags/${flag.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: newEnabled }),
-      });
+      const response = await apiFetch(
+        `/flags/${flag.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            enabled: newEnabled,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
       }
     } catch (err) {
       setFlags((prev) =>
@@ -120,7 +148,9 @@ function App() {
       );
 
       setError(
-        err instanceof Error ? err.message : 'Failed to toggle flag'
+        err instanceof Error
+          ? err.message
+          : 'Failed to toggle flag'
       );
     }
   }
@@ -135,12 +165,17 @@ function App() {
     }
 
     try {
-      const response = await apiFetch(`/flags/${flag.id}`, {
-        method: 'DELETE',
-      });
+      const response = await apiFetch(
+        `/flags/${flag.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
       }
 
       setFlags((prev) =>
@@ -148,142 +183,292 @@ function App() {
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to delete flag'
+        err instanceof Error
+          ? err.message
+          : 'Failed to delete flag'
       );
     }
   }
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <div className="mx-auto max-w-[1020px] px-6 py-8 lg:px-0 lg:py-10">
 
-        <header className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto w-full max-w-[1180px] px-5 py-7 sm:px-7 lg:px-8 lg:py-10">
+
+        {/* Header */}
+
+        <header className="mb-8 flex items-center justify-between">
+
           <div>
-            <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
               Configuration
-            </div>
+            </p>
 
-            <h1 className="text-[28px] font-semibold tracking-[-0.035em]">
+            <h1 className="text-[26px] font-semibold tracking-[-0.035em] sm:text-[30px]">
               Feature Flags
             </h1>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-4">
+
             <Link
               to="/segments"
-              className="text-sm text-text-dim transition-colors hover:text-text"
+              className="hidden rounded-xl px-3 py-2 text-sm text-text-dim transition-colors hover:bg-surface hover:text-text sm:block"
             >
               Segments
             </Link>
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+              className="dashboard-button dashboard-button-primary"
             >
               + New Flag
             </button>
           </div>
         </header>
 
-        {loading && (
-          <div className="border-y border-border py-6 font-mono text-xs text-text-dim">
-            Loading flags…
-          </div>
-        )}
+        {/* Error */}
 
         {error && (
-          <div className="border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+          <div className="mb-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
             {error}
           </div>
         )}
 
-        {!loading && !error && (
-          <div className="border border-border bg-surface/20">
+        {/* Main card */}
 
-            <div className="grid grid-cols-[1.35fr_1fr_1fr_1.2fr_70px] border-b border-border px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-text-dim">
-              <span>Key</span>
-              <span>Status</span>
-              <span>Rollout</span>
-              <span>Updated</span>
-              <span />
+        <div className="dashboard-card overflow-hidden">
+
+          {/* Card header */}
+
+          <div className="flex items-center justify-between border-b border-border-soft px-5 py-4 sm:px-6">
+
+            <div>
+              <p className="text-sm font-medium">
+                All flags
+              </p>
+
+              <p className="mt-0.5 text-xs text-text-muted">
+                Control releases and feature behaviour.
+              </p>
             </div>
 
-            {flags.map((flag) => (
-              <div
-                key={flag.id}
-                className="grid grid-cols-[1.35fr_1fr_1fr_1.2fr_70px] items-center border-b border-border px-5 py-5 transition-colors last:border-b-0 hover:bg-surface"
-              >
-                <Link
-                  to={`/flags/${flag.id}`}
-                  className="min-w-0 truncate font-mono text-[13px] text-text transition-colors hover:text-primary"
-                >
-                  {flag.key}
-                </Link>
-
-                <div>
-                  <button
-                    onClick={() => handleToggle(flag)}
-                    className="group inline-flex items-center gap-2 text-xs"
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        flag.enabled
-                          ? 'bg-success'
-                          : 'bg-text-dim'
-                      }`}
-                    />
-
-                    <span
-                      className={
-                        flag.enabled
-                          ? 'text-success'
-                          : 'text-text-dim'
-                      }
-                    >
-                      {flag.enabled ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </button>
-                </div>
-
-                <span className="font-mono text-xs text-text-dim">
-                  {flag.rollout
-                    ? `${flag.rollout.percentage}%`
-                    : '—'}
-                </span>
-
-                <span className="truncate pr-4 text-xs text-text-dim">
-                  {new Date(flag.updatedAt).toLocaleString()}
-                </span>
-
-                <button
-                  onClick={() => handleDelete(flag)}
-                  className="justify-self-end text-xs text-text-dim transition-colors hover:text-danger"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-
-            {flags.length === 0 && (
-              <div className="px-5 py-20 text-center">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim">
-                  No flags yet
-                </div>
-
-                <p className="mt-3 text-sm text-text-dim">
-                  Create your first flag to start controlling a release.
-                </p>
-              </div>
-            )}
+            <div className="rounded-full bg-surface-high px-3 py-1 text-[11px] text-text-dim">
+              {flags.length}{' '}
+              {flags.length === 1 ? 'flag' : 'flags'}
+            </div>
           </div>
-        )}
 
-        <div className="mt-5 flex items-center justify-between border-t border-border pt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-text-dim">
-          <span>
-            {flags.length} flag{flags.length === 1 ? '' : 's'}
-          </span>
+          {loading && (
+            <div className="px-6 py-16 text-center">
+              <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
 
-          <span>
+              <p className="mt-4 text-xs text-text-dim">
+                Loading flags…
+              </p>
+            </div>
+          )}
+
+          {!loading && (
+            <>
+              {/* Desktop table */}
+
+              <div className="hidden sm:block">
+
+                <div className="grid grid-cols-[1.5fr_1fr_0.8fr_1.4fr_70px] border-b border-border-soft px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
+                  <span>Key</span>
+                  <span>Status</span>
+                  <span>Rollout</span>
+                  <span>Updated</span>
+                  <span />
+                </div>
+
+                {flags.map((flag) => (
+                  <div
+                    key={flag.id}
+                    className="grid grid-cols-[1.5fr_1fr_0.8fr_1.4fr_70px] items-center border-b border-border-soft px-6 py-5 transition-colors last:border-b-0 hover:bg-white/[0.015]"
+                  >
+
+                    <Link
+                      to={`/flags/${flag.id}`}
+                      className="font-mono text-[13px] text-text transition-colors hover:text-primary"
+                    >
+                      {flag.key}
+                    </Link>
+
+                    <button
+                      onClick={() =>
+                        handleToggle(flag)
+                      }
+                      className="flex w-fit items-center gap-2 rounded-full bg-surface-high px-2.5 py-1 text-xs"
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          flag.enabled
+                            ? 'bg-success'
+                            : 'bg-text-muted'
+                        }`}
+                      />
+
+                      <span
+                        className={
+                          flag.enabled
+                            ? 'text-success'
+                            : 'text-text-dim'
+                        }
+                      >
+                        {flag.enabled
+                          ? 'Enabled'
+                          : 'Disabled'}
+                      </span>
+                    </button>
+
+                    <span className="font-mono text-xs text-text-dim">
+                      {flag.rollout
+                        ? `${flag.rollout.percentage}%`
+                        : '—'}
+                    </span>
+
+                    <span className="text-xs text-text-muted">
+                      {new Date(
+                        flag.updatedAt
+                      ).toLocaleString()}
+                    </span>
+
+                    <button
+                      onClick={() =>
+                        handleDelete(flag)
+                      }
+                      className="justify-self-end rounded-lg px-2 py-1 text-xs text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+
+                {flags.length === 0 && (
+                  <div className="px-6 py-20 text-center">
+
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-high text-xl text-text-muted">
+                      +
+                    </div>
+
+                    <p className="mt-4 text-sm font-medium">
+                      No flags yet
+                    </p>
+
+                    <p className="mt-1 text-xs text-text-muted">
+                      Create your first feature flag.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile cards */}
+
+              <div className="divide-y divide-border-soft sm:hidden">
+
+                {flags.map((flag) => (
+                  <div
+                    key={flag.id}
+                    className="p-5"
+                  >
+
+                    <div className="flex items-start justify-between">
+
+                      <Link
+                        to={`/flags/${flag.id}`}
+                        className="font-mono text-sm text-text"
+                      >
+                        {flag.key}
+                      </Link>
+
+                      <button
+                        onClick={() =>
+                          handleToggle(flag)
+                        }
+                        className="flex items-center gap-2 rounded-full bg-surface-high px-2.5 py-1 text-[11px]"
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            flag.enabled
+                              ? 'bg-success'
+                              : 'bg-text-muted'
+                          }`}
+                        />
+
+                        {flag.enabled
+                          ? 'Enabled'
+                          : 'Disabled'}
+                      </button>
+                    </div>
+
+                    {flag.description && (
+                      <p className="mt-2 text-xs leading-5 text-text-muted">
+                        {flag.description}
+                      </p>
+                    )}
+
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+
+                      <div className="rounded-xl bg-surface-soft p-3">
+                        <p className="text-[10px] uppercase tracking-wider text-text-muted">
+                          Rollout
+                        </p>
+
+                        <p className="mt-1 font-mono text-sm">
+                          {flag.rollout
+                            ? `${flag.rollout.percentage}%`
+                            : '—'}
+                        </p>
+                      </div>
+
+                      <div className="rounded-xl bg-surface-soft p-3">
+                        <p className="text-[10px] uppercase tracking-wider text-text-muted">
+                          Updated
+                        </p>
+
+                        <p className="mt-1 text-xs text-text-dim">
+                          {new Date(
+                            flag.updatedAt
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        handleDelete(flag)
+                      }
+                      className="mt-4 text-xs text-text-muted hover:text-danger"
+                    >
+                      Delete flag
+                    </button>
+                  </div>
+                ))}
+
+                {flags.length === 0 && (
+                  <div className="px-5 py-16 text-center">
+                    <p className="text-sm font-medium">
+                      No flags yet
+                    </p>
+
+                    <p className="mt-1 text-xs text-text-muted">
+                      Create your first feature flag.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Bottom metadata */}
+
+        <div className="mt-5 flex items-center justify-between px-1 text-[10px] text-text-muted">
+          <span>Flagwise</span>
+
+          <span className="hidden sm:block">
             Local evaluation · Real-time updates
           </span>
         </div>
@@ -292,14 +477,17 @@ function App() {
       {showCreateModal && (
         <Modal
           title="Create Flag"
-          onClose={() => setShowCreateModal(false)}
+          onClose={() =>
+            setShowCreateModal(false)
+          }
         >
           <form
             onSubmit={handleCreateFlag}
             className="space-y-5"
           >
+
             <div>
-              <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.14em] text-text-dim">
+              <label className="dashboard-label">
                 Key
               </label>
 
@@ -307,14 +495,16 @@ function App() {
                 type="text"
                 required
                 value={newKey}
-                onChange={(e) => setNewKey(e.target.value)}
+                onChange={(e) =>
+                  setNewKey(e.target.value)
+                }
                 placeholder="checkout-v2"
-                className="w-full border border-border bg-bg px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-dim/50 focus:border-primary focus:outline-none"
+                className="dashboard-input font-mono text-sm"
               />
             </div>
 
             <div>
-              <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.14em] text-text-dim">
+              <label className="dashboard-label">
                 Description
               </label>
 
@@ -322,10 +512,12 @@ function App() {
                 type="text"
                 value={newDescription}
                 onChange={(e) =>
-                  setNewDescription(e.target.value)
+                  setNewDescription(
+                    e.target.value
+                  )
                 }
-                placeholder="Optional"
-                className="w-full border border-border bg-bg px-3 py-2.5 text-sm text-text placeholder:text-text-dim/50 focus:border-primary focus:outline-none"
+                placeholder="Optional description"
+                className="dashboard-input text-sm"
               />
             </div>
 
@@ -335,11 +527,14 @@ function App() {
               </p>
             )}
 
-            <div className="flex justify-end gap-3 border-t border-border pt-4">
+            <div className="flex justify-end gap-2 border-t border-border-soft pt-5">
+
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="px-3 py-2 text-sm text-text-dim hover:text-text"
+                onClick={() =>
+                  setShowCreateModal(false)
+                }
+                className="dashboard-button dashboard-button-secondary"
               >
                 Cancel
               </button>
@@ -347,9 +542,11 @@ function App() {
               <button
                 type="submit"
                 disabled={creating}
-                className="border border-primary bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-transparent hover:text-primary disabled:opacity-50"
+                className="dashboard-button dashboard-button-primary disabled:opacity-50"
               >
-                {creating ? 'Creating…' : 'Create Flag'}
+                {creating
+                  ? 'Creating…'
+                  : 'Create Flag'}
               </button>
             </div>
           </form>

@@ -13,37 +13,35 @@ export function Modal({
 }: ModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md border border-border bg-surface shadow-2xl"
+        className="w-full max-w-md rounded-[20px] border border-border bg-surface p-6 shadow-[0_25px_80px_rgba(0,0,0,0.55)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+
+        <div className="mb-6 flex items-center justify-between">
 
           <div>
-            <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-dim">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-text-muted">
               Configuration
-            </div>
+            </p>
 
-            <h2 className="mt-1 text-sm font-medium">
+            <h2 className="text-lg font-semibold tracking-[-0.025em]">
               {title}
             </h2>
           </div>
 
           <button
             onClick={onClose}
-            aria-label="Close"
-            className="flex h-7 w-7 items-center justify-center border border-border text-text-dim hover:border-text-dim hover:text-text"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-high text-sm text-text-dim transition-colors hover:bg-[#24272d] hover:text-text"
           >
             ×
           </button>
         </div>
 
-        <div className="p-5">
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );

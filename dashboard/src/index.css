@@ -1,21 +1,28 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #0b0d10;
-  --color-surface: #111419;
-  --color-surface-high: #181c22;
-  --color-border: #262b33;
+  --color-bg: #090a0c;
+  --color-surface: #141519;
+  --color-surface-high: #1b1d22;
+  --color-surface-soft: #101114;
 
-  --color-text: #e7e9ee;
-  --color-text-dim: #7f8794;
+  --color-border: #24262c;
+  --color-border-soft: #1d1f24;
 
-  --color-primary: #4f8cff;
+  --color-text: #f1f2f4;
+  --color-text-dim: #858993;
+  --color-text-muted: #5f636d;
 
-  --color-success: #36c98f;
-  --color-warning: #d9a441;
-  --color-danger: #e26363;
+  --color-primary: #3f86ff;
+  --color-primary-soft: rgba(63, 134, 255, 0.13);
 
-  --font-sans: 'Inter', sans-serif;
+  --color-success: #35c98b;
+  --color-warning: #e0ad48;
+  --color-danger: #ef6868;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'Segoe UI', sans-serif;
+
   --font-mono: 'JetBrains Mono', monospace;
 }
 
@@ -25,36 +32,35 @@
   text-rendering: optimizeLegibility;
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
-}
-
 html {
-  background: var(--color-bg);
+  background: #090a0c;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background: var(--color-bg);
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(63, 134, 255, 0.055),
+      transparent 42%
+    ),
+    #090a0c;
+
   color: var(--color-text);
   font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
 
-::selection {
-  background: rgba(79, 140, 255, 0.25);
-  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
-a,
 input,
-textarea,
-select {
-  font: inherit;
+select,
+textarea {
+  font-family: inherit;
 }
 
 button,
@@ -62,30 +68,125 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
-pre,
-code {
-  font-family: var(--font-mono);
+button {
+  cursor: pointer;
+}
+
+input::placeholder {
+  color: #5f636d;
 }
 
 select option {
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: #141519;
+  color: #f1f2f4;
+}
+
+::selection {
+  background: rgba(63, 134, 255, 0.25);
+  color: white;
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: #090a0c;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid var(--color-bg);
-  background: #2a3039;
+  background: #292c33;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a424e;
+  background: #363a43;
+}
+
+/* Premium dashboard surfaces */
+
+.dashboard-card {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.025),
+    rgba(255, 255, 255, 0.01)
+  );
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 18px 50px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-input {
+  width: 100%;
+  border: 1px solid #292c32;
+  border-radius: 11px;
+  background: #101114;
+  padding: 11px 13px;
+  color: #f1f2f4;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.dashboard-input:focus {
+  border-color: rgba(63, 134, 255, 0.75);
+  background: #121419;
+  box-shadow: 0 0 0 3px rgba(63, 134, 255, 0.1);
+}
+
+.dashboard-button {
+  border-radius: 11px;
+  padding: 10px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    opacity 150ms ease;
+}
+
+.dashboard-button:active {
+  transform: scale(0.98);
+}
+
+.dashboard-button-primary {
+  background: #3f86ff;
+  color: white;
+  box-shadow:
+    0 4px 14px rgba(63, 134, 255, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-button-primary:hover {
+  background: #4a8dff;
+}
+
+.dashboard-button-secondary {
+  border: 1px solid #2a2d34;
+  background: #17191d;
+  color: #b9bdc6;
+}
+
+.dashboard-button-secondary:hover {
+  background: #1d2025;
+  color: #f1f2f4;
+}
+
+.dashboard-label {
+  margin-bottom: 7px;
+  display: block;
+  color: #737782;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.dashboard-divider {
+  border-color: #23252b;
 }
