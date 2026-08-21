@@ -1,23 +1,94 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #10131a;
-  --color-surface: #191b23;
-  --color-surface-high: #272a31;
-  --color-border: #262a33;
-  --color-text: #e1e2ec;
-  --color-text-dim: #8c909f;
-  --color-primary: #3b82f6;
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-danger: #f87171;
+  --color-bg: #0c0e12;
+  --color-surface: #111419;
+  --color-surface-high: #171a20;
+  --color-border: #252932;
+  --color-text: #e7e9ee;
+  --color-text-dim: #858b98;
+  --color-primary: #4f8cff;
+  --color-success: #39c98a;
+  --color-warning: #d9a441;
+  --color-danger: #e26363;
 
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  background: #0c0e12;
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: var(--color-bg);
+  margin: 0;
+  min-width: 320px;
+  background:
+    linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px
+    ),
+    #0c0e12;
+  background-size: 72px 72px;
   color: var(--color-text);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(79, 140, 255, 0.28);
+  color: #fff;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  text-decoration: none;
+}
+
+pre,
+code {
+  font-family: var(--font-mono);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0c0e12;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid #0c0e12;
+  background: #292e38;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a414e;
 }
