@@ -30,8 +30,8 @@ export function buildServer(pool?: Pool, redisClient?: Redis) {
   });
 
   app.addHook('preHandler', async (request, reply) => {
-    // Skip auth for health check
-    if (request.url === '/health') return;
+    // Skip auth for health check and CORS preflight
+    if (request.url === '/health' || request.method === 'OPTIONS') return;
     const providedKey = request.headers['x-api-key'];
     if (providedKey !== config.apiKey) {
       reply.code(401).send({ error: 'Unauthorized: missing or invalid API key' });
