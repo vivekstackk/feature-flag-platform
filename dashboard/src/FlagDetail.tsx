@@ -1,19 +1,25 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  useParams,
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+
 import { apiFetch } from './api';
 
 interface TargetingRule {
   attribute: string;
   operator: string;
-  value: string | number | boolean | (string | number)[];
+  value:
+    | string
+    | number
+    | boolean
+    | (string | number)[];
   serveValue: boolean;
-}
-
-interface VariantStats {
-  variant: boolean;
-  exposures: number;
-  conversions: number;
-  conversionRate: number;
 }
 
 interface AuditEntry {
@@ -30,32 +36,50 @@ interface Flag {
   enabled: boolean;
   defaultValue: boolean;
   rules: TargetingRule[];
-  rollout: { percentage: number; serveValue: boolean } | null;
+  rollout: {
+    percentage: number;
+    serveValue: boolean;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
 
 function FlagDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{
+    id: string;
+  }>();
+
   const navigate = useNavigate();
-  const [flag, setFlag] = useState<Flag | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const [rolloutPercentage, setRolloutPercentage] = useState(0);
-  const [savingRollout, setSavingRollout] = useState(false);
-  const [rolloutSaved, setRolloutSaved] = useState(true);
+  const [flag, setFlag] =
+    useState<Flag | null>(null);
 
-  const [rules, setRules] = useState<TargetingRule[]>([]);
-  const [rulesSaved, setRulesSaved] = useState(true);
-  const [savingRules, setSavingRules] = useState(false);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [eventName, setEventName] = useState('');
-  const [stats, setStats] = useState<VariantStats[] | null>(null);
-  const [loadingStats, setLoadingStats] = useState(false);
-  const [statsError, setStatsError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
 
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [rolloutPercentage, setRolloutPercentage] =
+    useState(0);
+
+  const [savingRollout, setSavingRollout] =
+    useState(false);
+
+  const [rolloutSaved, setRolloutSaved] =
+    useState(true);
+
+  const [rules, setRules] =
+    useState<TargetingRule[]>([]);
+
+  const [rulesSaved, setRulesSaved] =
+    useState(true);
+
+  const [savingRules, setSavingRules] =
+    useState(false);
+
+  const [auditLog, setAuditLog] =
+    useState<AuditEntry[]>([]);
 
   useEffect(() => {
     fetchFlag();
@@ -64,22 +88,45 @@ function FlagDetail() {
   async function fetchFlag() {
     try {
       setLoading(true);
-      const response = await apiFetch(`/flags/${id}`);
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+      const response = await apiFetch(
+        `/flags/${id}`
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
+      }
+
       const data = await response.json();
+
       setFlag(data);
-      setRolloutPercentage(data.rollout?.percentage ?? 0);
+
+      setRolloutPercentage(
+        data.rollout?.percentage ?? 0
+      );
+
       setRules(data.rules ?? []);
+
       setError(null);
 
-      // Fetch audit log
-      const auditResponse = await apiFetch(`/audit-log/flag/${id}`);
+      const auditResponse = await apiFetch(
+        `/audit-log/flag/${id}`
+      );
+
       if (auditResponse.ok) {
-        const auditData = await auditResponse.json();
+        const auditData =
+          await auditResponse.json();
+
         setAuditLog(auditData);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load flag');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to load flag'
+      );
     } finally {
       setLoading(false);
     }
@@ -87,23 +134,47 @@ function FlagDetail() {
 
   async function handleSaveRollout() {
     if (!flag) return;
+
     setSavingRollout(true);
 
     try {
-      const response = await apiFetch(`/flags/${flag.id}/rollout`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rollout: rolloutPercentage > 0 ? { percentage: rolloutPercentage, serveValue: true } : null,
-        }),
-      });
+      const response = await apiFetch(
+        `/flags/${flag.id}/rollout`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rollout:
+              rolloutPercentage > 0
+                ? {
+                    percentage:
+                      rolloutPercentage,
+                    serveValue: true,
+                  }
+                : null,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      const updated = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
+      }
+
+      const updated =
+        await response.json();
+
       setFlag(updated);
       setRolloutSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save rollout');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to save rollout'
+      );
     } finally {
       setSavingRollout(false);
     }
@@ -112,80 +183,130 @@ function FlagDetail() {
   function addRule() {
     setRules((prev) => [
       ...prev,
-      { attribute: '', operator: 'equals', value: '', serveValue: true },
+      {
+        attribute: '',
+        operator: 'equals',
+        value: '',
+        serveValue: true,
+      },
     ]);
+
     setRulesSaved(false);
   }
 
-  function updateRule(index: number, changes: Partial<TargetingRule>) {
-    setRules((prev) => prev.map((rule, i) => (i === index ? { ...rule, ...changes } : rule)));
+  function updateRule(
+    index: number,
+    changes: Partial<TargetingRule>
+  ) {
+    setRules((prev) =>
+      prev.map((rule, i) =>
+        i === index
+          ? {
+              ...rule,
+              ...changes,
+            }
+          : rule
+      )
+    );
+
     setRulesSaved(false);
   }
 
   function removeRule(index: number) {
-    setRules((prev) => prev.filter((_, i) => i !== index));
+    setRules((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
+
     setRulesSaved(false);
   }
 
   async function handleSaveRules() {
     if (!flag) return;
+
     setSavingRules(true);
 
     try {
-      const response = await apiFetch(`/flags/${flag.id}/rules`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rules }),
-      });
+      const response = await apiFetch(
+        `/flags/${flag.id}/rules`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rules,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      const updated = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
+      }
+
+      const updated =
+        await response.json();
+
       setFlag(updated);
       setRulesSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save rules');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to save rules'
+      );
     } finally {
       setSavingRules(false);
     }
   }
 
-  async function handleLoadStats() {
-    if (!flag || !eventName.trim()) return;
-    setLoadingStats(true);
-    setStatsError(null);
+  async function handleDeleteFlag() {
+    if (!flag) return;
+
+    if (
+      !confirm(
+        `Delete flag "${flag.key}"? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
 
     try {
       const response = await apiFetch(
-        `/experiments/${flag.key}/stats?event=${encodeURIComponent(eventName)}`
+        `/flags/${flag.id}`,
+        {
+          method: 'DELETE',
+        }
       );
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      const data = await response.json();
-      setStats(data.variants);
+
+      if (!response.ok) {
+        throw new Error(
+          `Request failed: ${response.status}`
+        );
+      }
+
+      // IMPORTANT:
+      // Go back to dashboard, NOT landing.
+      navigate('/dashboard');
     } catch (err) {
-      setStatsError(err instanceof Error ? err.message : 'Failed to load stats');
-    } finally {
-      setLoadingStats(false);
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to delete flag'
+      );
     }
   }
 
-  async function handleDeleteFlag() {
-    if (!flag) return;
-    if (!confirm(`Delete flag "${flag.key}"? This cannot be undone.`)) return;
+  const hasUnsavedChanges =
+    !rolloutSaved || !rulesSaved;
 
-    try {
-      const response = await apiFetch(`/flags/${flag.id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-      navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete flag');
-    }
-  }
-
-  const hasUnsavedChanges = !rolloutSaved || !rulesSaved;
-  const [savingAll, setSavingAll] = useState(false);
+  const [savingAll, setSavingAll] =
+    useState(false);
 
   async function handleSaveAll() {
     if (!flag) return;
+
     setSavingAll(true);
     setError(null);
 
@@ -193,189 +314,332 @@ function FlagDetail() {
       if (!rolloutSaved) {
         await handleSaveRollout();
       }
+
       if (!rulesSaved) {
         await handleSaveRules();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save changes');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to save changes'
+      );
     } finally {
       setSavingAll(false);
     }
   }
 
-  if (loading) return <div className="p-10 text-text-dim">Loading…</div>;
-  if (error) return <div className="p-10 text-danger">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#08090B] p-10 text-[#666B74]">
+        Loading…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#08090B] p-10 text-[#F87171]">
+        Error: {error}
+      </div>
+    );
+  }
+
   if (!flag) return null;
 
   return (
-    <div className="min-h-screen bg-bg text-text">
-      <div className="mx-auto max-w-4xl px-6 py-10">
-        <Link to="/" className="mb-6 inline-block text-sm text-text-dim hover:text-text">
-          ← Back to flags
+    <div className="min-h-screen bg-[#08090B] text-[#E9EAED]">
+
+      <div className="mx-auto w-full px-5 py-8 sm:px-8 lg:px-12">
+
+        {/* BACK TO DASHBOARD */}
+        <Link
+          to="/dashboard"
+          className="mb-8 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#5F646D] transition-colors hover:text-white"
+        >
+          ← Feature Flags
         </Link>
 
-        <header className="mb-8">
-          <div className="flex items-center justify-between">
+        {/* Header */}
+        <header className="mb-8 border-b border-white/[0.065] pb-7">
+
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+
             <div className="flex items-center gap-3">
-              <h1 className="font-mono text-2xl font-semibold">{flag.key}</h1>
+
+              <h1 className="font-mono text-2xl font-semibold">
+                {flag.key}
+              </h1>
+
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  flag.enabled ? 'bg-success/15 text-success' : 'bg-text-dim/15 text-text-dim'
+                  flag.enabled
+                    ? 'bg-[#3AC88D]/[0.12] text-[#3AC88D]'
+                    : 'bg-white/[0.05] text-[#666B74]'
                 }`}
               >
                 <span
-                  className={`h-1.5 w-1.5 rounded-full ${flag.enabled ? 'bg-success' : 'bg-text-dim'}`}
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    flag.enabled
+                      ? 'bg-[#3AC88D]'
+                      : 'bg-[#666B74]'
+                  }`}
                 />
-                {flag.enabled ? 'Enabled' : 'Disabled'}
+
+                {flag.enabled
+                  ? 'Enabled'
+                  : 'Disabled'}
               </span>
             </div>
+
             <div className="flex items-center gap-2">
+
               {hasUnsavedChanges && (
                 <button
                   onClick={handleSaveAll}
                   disabled={savingAll}
-                  className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="rounded-full bg-[#3F7FF5] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                  {savingAll ? 'Saving…' : 'Save All Changes'}
+                  {savingAll
+                    ? 'Saving…'
+                    : 'Save All Changes'}
                 </button>
               )}
+
               <button
                 onClick={handleDeleteFlag}
-                className="rounded-md border border-danger/30 px-3 py-1.5 text-sm text-danger transition-colors hover:bg-danger hover:text-white"
+                className="rounded-full border border-[#F87171]/25 px-4 py-2 text-sm text-[#F87171] transition-colors hover:bg-[#F87171] hover:text-white"
               >
                 Delete Flag
               </button>
             </div>
           </div>
-          {flag.description && <p className="mt-2 text-sm text-text-dim">{flag.description}</p>}
+
+          {flag.description && (
+            <p className="mt-2 text-sm text-[#666B74]">
+              {flag.description}
+            </p>
+          )}
         </header>
 
-        <section className="rounded-lg border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold">Rollout Percentage</h2>
+        {/* Rollout */}
+        <section className="rounded-2xl border border-white/[0.075] bg-[#111317] p-6">
+
+          <h2 className="mb-5 text-lg font-semibold">
+            Rollout Percentage
+          </h2>
+
           <div className="flex items-center gap-4">
+
             <input
               type="range"
               min="0"
               max="100"
               value={rolloutPercentage}
               onChange={(e) => {
-                setRolloutPercentage(Number(e.target.value));
+                setRolloutPercentage(
+                  Number(e.target.value)
+                );
+
                 setRolloutSaved(false);
               }}
-              className="flex-1 accent-primary"
+              className="flex-1 accent-[#3F7FF5]"
             />
-            <div className="flex items-center gap-1 rounded-md border border-border bg-bg px-2 py-1">
+
+            <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-[#08090B] px-2 py-1">
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={rolloutPercentage}
                 onChange={(e) => {
-                  setRolloutPercentage(Number(e.target.value));
+                  setRolloutPercentage(
+                    Number(e.target.value)
+                  );
+
                   setRolloutSaved(false);
                 }}
-                className="w-14 bg-transparent text-right font-mono text-sm text-text focus:outline-none"
+                className="w-14 bg-transparent text-right font-mono text-sm text-white focus:outline-none"
               />
-              <span className="font-mono text-sm text-text-dim">%</span>
+
+              <span className="font-mono text-sm text-[#666B74]">
+                %
+              </span>
             </div>
           </div>
+
           <button
             onClick={handleSaveRollout}
-            disabled={savingRollout || rolloutSaved}
-            className={`mt-4 rounded-md px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-50 ${
-              rolloutSaved && !savingRollout
-                ? 'bg-success/15 text-success'
-                : 'bg-primary text-white hover:opacity-90'
+            disabled={
+              savingRollout ||
+              rolloutSaved
+            }
+            className={`mt-5 rounded-full px-5 py-2 text-sm font-medium transition-opacity disabled:opacity-50 ${
+              rolloutSaved &&
+              !savingRollout
+                ? 'bg-[#3AC88D]/[0.12] text-[#3AC88D]'
+                : 'bg-[#3F7FF5] text-white hover:opacity-90'
             }`}
           >
-            {savingRollout ? 'Saving…' : rolloutSaved ? 'Saved ✓' : 'Save Rollout'}
+            {savingRollout
+              ? 'Saving…'
+              : rolloutSaved
+              ? 'Saved ✓'
+              : 'Save Rollout'}
           </button>
         </section>
 
-        <section className="mt-6 rounded-lg border border-border bg-surface p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Targeting Rules</h2>
+        {/* Targeting */}
+        <section className="mt-6 rounded-2xl border border-white/[0.075] bg-[#111317] p-6">
+
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
+              Targeting Rules
+            </h2>
+
             <button
               onClick={addRule}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-text-dim transition-colors hover:border-primary hover:text-text"
+              className="rounded-full border border-white/[0.1] px-4 py-2 text-sm text-[#A4A8B0] transition-colors hover:border-[#3F7FF5] hover:text-white"
             >
               + Add Rule
             </button>
           </div>
 
           {rules.length === 0 && (
-            <p className="text-sm text-text-dim">No rules yet. Add one to target specific users.</p>
+            <p className="text-sm text-[#666B74]">
+              No rules yet. Add one to target specific users.
+            </p>
           )}
 
           <div className="space-y-3">
+
             {rules.map((rule, index) => (
-              <div key={index} className="rounded-md border border-border bg-bg p-4">
-                <div className="grid grid-cols-12 gap-3">
-                  <div className="col-span-4">
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-text-dim">
+              <div
+                key={index}
+                className="rounded-xl border border-white/[0.07] bg-[#08090B] p-4"
+              >
+
+                <div className="grid gap-3 lg:grid-cols-12">
+
+                  <div className="lg:col-span-4">
+                    <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#666B74]">
                       Attribute
                     </label>
+
                     <input
                       type="text"
                       value={rule.attribute}
-                      onChange={(e) => updateRule(index, { attribute: e.target.value })}
+                      onChange={(e) =>
+                        updateRule(index, {
+                          attribute:
+                            e.target.value,
+                        })
+                      }
                       placeholder="plan"
-                      className="w-full rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-sm text-text focus:border-primary focus:outline-none"
+                      className="w-full rounded-lg border border-white/[0.08] bg-[#111317] px-3 py-2 font-mono text-sm text-white focus:border-[#3F7FF5] focus:outline-none"
                     />
                   </div>
-                  <div className="col-span-3">
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-text-dim">
+
+                  <div className="lg:col-span-3">
+                    <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#666B74]">
                       Operator
                     </label>
+
                     <select
                       value={rule.operator}
-                      onChange={(e) => updateRule(index, { operator: e.target.value })}
-                      className="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text focus:border-primary focus:outline-none"
+                      onChange={(e) =>
+                        updateRule(index, {
+                          operator:
+                            e.target.value,
+                        })
+                      }
+                      className="w-full rounded-lg border border-white/[0.08] bg-[#111317] px-3 py-2 text-sm text-white focus:border-[#3F7FF5] focus:outline-none"
                     >
-                      <option value="equals">equals</option>
-                      <option value="notEquals">not equals</option>
-                      <option value="in">in</option>
-                      <option value="contains">contains</option>
-                      <option value="inSegment">in segment</option>
+                      <option value="equals">
+                        equals
+                      </option>
+
+                      <option value="notEquals">
+                        not equals
+                      </option>
+
+                      <option value="in">
+                        in
+                      </option>
+
+                      <option value="contains">
+                        contains
+                      </option>
+
+                      <option value="inSegment">
+                        in segment
+                      </option>
                     </select>
                   </div>
-                  <div className="col-span-5">
-                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-text-dim">
+
+                  <div className="lg:col-span-5">
+                    <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-[#666B74]">
                       Value
                     </label>
+
                     <input
                       type="text"
-                      value={String(rule.value)}
-                      onChange={(e) => updateRule(index, { value: e.target.value })}
+                      value={String(
+                        rule.value
+                      )}
+                      onChange={(e) =>
+                        updateRule(index, {
+                          value:
+                            e.target.value,
+                        })
+                      }
                       placeholder="pro"
-                      className="w-full rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-sm text-text focus:border-primary focus:outline-none"
+                      className="w-full rounded-lg border border-white/[0.08] bg-[#111317] px-3 py-2 font-mono text-sm text-white focus:border-[#3F7FF5] focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                  <div className="flex items-center gap-2 text-sm text-text-dim">
+                <div className="mt-4 flex items-center justify-between border-t border-white/[0.065] pt-4">
+
+                  <div className="flex items-center gap-2 text-sm text-[#666B74]">
                     Then serve:
+
                     <button
-                      onClick={() => updateRule(index, { serveValue: true })}
-                      className={`rounded-md px-3 py-1 text-xs font-medium ${
-                        rule.serveValue ? 'bg-surface-high text-text' : 'text-text-dim'
+                      onClick={() =>
+                        updateRule(index, {
+                          serveValue: true,
+                        })
+                      }
+                      className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                        rule.serveValue
+                          ? 'bg-white/[0.08] text-white'
+                          : 'text-[#666B74]'
                       }`}
                     >
                       True
                     </button>
+
                     <button
-                      onClick={() => updateRule(index, { serveValue: false })}
-                      className={`rounded-md px-3 py-1 text-xs font-medium ${
-                        !rule.serveValue ? 'bg-surface-high text-text' : 'text-text-dim'
+                      onClick={() =>
+                        updateRule(index, {
+                          serveValue: false,
+                        })
+                      }
+                      className={`rounded-lg px-3 py-1 text-xs font-medium ${
+                        !rule.serveValue
+                          ? 'bg-white/[0.08] text-white'
+                          : 'text-[#666B74]'
                       }`}
                     >
                       False
                     </button>
                   </div>
+
                   <button
-                    onClick={() => removeRule(index)}
-                    className="text-sm text-text-dim transition-colors hover:text-danger"
+                    onClick={() =>
+                      removeRule(index)
+                    }
+                    className="text-sm text-[#666B74] transition-colors hover:text-[#F87171]"
                   >
                     Delete
                   </button>
@@ -386,99 +650,67 @@ function FlagDetail() {
 
           <button
             onClick={handleSaveRules}
-            disabled={savingRules || rulesSaved}
-            className={`mt-4 rounded-md px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-50 ${
+            disabled={
+              savingRules || rulesSaved
+            }
+            className={`mt-5 rounded-full px-5 py-2 text-sm font-medium transition-opacity disabled:opacity-50 ${
               rulesSaved && !savingRules
-                ? 'bg-success/15 text-success'
-                : 'bg-primary text-white hover:opacity-90'
+                ? 'bg-[#3AC88D]/[0.12] text-[#3AC88D]'
+                : 'bg-[#3F7FF5] text-white hover:opacity-90'
             }`}
           >
-            {savingRules ? 'Saving…' : rulesSaved ? 'Saved ✓' : 'Save Rules'}
+            {savingRules
+              ? 'Saving…'
+              : rulesSaved
+              ? 'Saved ✓'
+              : 'Save Rules'}
           </button>
         </section>
 
-        <section className="mt-6 rounded-lg border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold">Experiment Stats</h2>
-          <div className="mb-4 flex items-center gap-3">
-            <input
-              type="text"
-              value={eventName}
-              onChange={(e) => setEventName(e.target.value)}
-              placeholder="purchase"
-              className="flex-1 rounded-md border border-border bg-bg px-3 py-2 font-mono text-sm text-text placeholder-text-dim/50 focus:border-primary focus:outline-none"
-            />
-            <button
-              onClick={handleLoadStats}
-              disabled={loadingStats || !eventName.trim()}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {loadingStats ? 'Loading…' : 'Load Stats'}
-            </button>
-          </div>
+        {/* Activity */}
+        <section className="mt-6 rounded-2xl border border-white/[0.075] bg-[#111317] p-6">
 
-          {statsError && <p className="text-sm text-danger">{statsError}</p>}
+          <h2 className="mb-5 text-lg font-semibold">
+            Activity Log
+          </h2>
 
-          {stats && stats.length === 0 && (
-            <p className="text-sm text-text-dim">No exposure data yet for this event.</p>
-          )}
-
-          {stats && stats.length > 0 && (
-            <div className="space-y-3">
-              {stats.map((variant) => (
-                <div
-                  key={String(variant.variant)}
-                  className="flex items-center justify-between rounded-md border border-border bg-bg p-4"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${variant.variant ? 'bg-success' : 'bg-text-dim'}`}
-                    />
-                    <span className="font-mono text-sm">{variant.variant ? 'true' : 'false'}</span>
-                  </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <span className="text-text-dim">
-                      Exposures: <span className="font-mono text-text">{variant.exposures}</span>
-                    </span>
-                    <span className="text-text-dim">
-                      Conversions: <span className="font-mono text-text">{variant.conversions}</span>
-                    </span>
-                    <span className="text-text-dim">
-                      Rate:{' '}
-                      <span className="font-mono text-text">
-                        {(variant.conversionRate * 100).toFixed(1)}%
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="mt-6 rounded-lg border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold">Activity Log</h2>
           {auditLog.length === 0 && (
-            <p className="text-sm text-text-dim">No activity recorded yet.</p>
+            <p className="text-sm text-[#666B74]">
+              No activity recorded yet.
+            </p>
           )}
+
           <div className="space-y-2">
+
             {auditLog.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-start justify-between rounded-md border border-border bg-bg p-3"
+                className="flex flex-col gap-3 rounded-xl border border-white/[0.07] bg-[#08090B] p-4 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div>
-                  <span className="text-sm font-medium text-text">{entry.action}</span>
-                  <p className="mt-0.5 font-mono text-xs text-text-dim">
-                    {JSON.stringify(entry.changes, null, 0).slice(0, 120)}
+                  <span className="text-sm font-medium text-white">
+                    {entry.action}
+                  </span>
+
+                  <p className="mt-1 font-mono text-xs text-[#666B74]">
+                    {JSON.stringify(
+                      entry.changes,
+                      null,
+                      0
+                    ).slice(0, 120)}
                   </p>
                 </div>
-                <span className="whitespace-nowrap text-xs text-text-dim">
-                  {new Date(entry.createdAt).toLocaleString()}
+
+                <span className="whitespace-nowrap text-xs text-[#666B74]">
+                  {new Date(
+                    entry.createdAt
+                  ).toLocaleString()}
                 </span>
               </div>
             ))}
           </div>
         </section>
+
       </div>
     </div>
   );
