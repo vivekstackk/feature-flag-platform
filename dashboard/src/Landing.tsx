@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 function FlagwiseMark() {
@@ -65,6 +66,68 @@ function Arrow() {
 }
 
 function Landing() {
+  const heroRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+
+    let frame = 0;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      cancelAnimationFrame(frame);
+
+      frame = requestAnimationFrame(() => {
+        const rect = hero.getBoundingClientRect();
+
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+        hero.style.setProperty('--mouse-x', `${x * 24}px`);
+        hero.style.setProperty('--mouse-y', `${y * 16}px`);
+      });
+    };
+
+    const handlePointerLeave = () => {
+      hero.style.setProperty('--mouse-x', '0px');
+      hero.style.setProperty('--mouse-y', '0px');
+    };
+
+    hero.addEventListener('pointermove', handlePointerMove);
+    hero.addEventListener('pointerleave', handlePointerLeave);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      hero.removeEventListener('pointermove', handlePointerMove);
+      hero.removeEventListener('pointerleave', handlePointerLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    const elements = document.querySelectorAll<HTMLElement>('.fw-reveal');
+
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('fw-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.12,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    elements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#08090B] text-[#F1F2F4]">
 
@@ -72,14 +135,14 @@ function Landing() {
           NAVIGATION
       ========================================================= */}
 
-      <header className="relative z-50 border-b border-white/[0.075]">
-        <nav className="mx-auto flex h-[72px] max-w-[1380px] items-center justify-between px-6 sm:px-8 lg:px-10">
+      <header className="relative z-50 border-b border-white/[0.075] fw-nav">
+        <nav className="flex h-[72px] w-full items-center justify-between px-7 sm:px-8 lg:px-10">
 
           {/* Brand */}
 
           <Link
             to="/"
-            className="group flex items-center gap-3"
+            className="group flex items-center gap-3 fw-logo"
             aria-label="Flagwise home"
           >
             <FlagwiseMark />
@@ -95,21 +158,21 @@ function Landing() {
 
             <a
               href="#product"
-              className="text-[13px] text-[#8A8E97] transition-colors hover:text-white"
+              className="fw-nav-link text-[13px] text-[#8A8E97]"
             >
               Product
             </a>
 
             <a
               href="#how-it-works"
-              className="text-[13px] text-[#8A8E97] transition-colors hover:text-white"
+              className="fw-nav-link text-[13px] text-[#8A8E97]"
             >
               How it works
             </a>
 
             <a
               href="#developers"
-              className="text-[13px] text-[#8A8E97] transition-colors hover:text-white"
+              className="fw-nav-link text-[13px] text-[#8A8E97]"
             >
               Developers
             </a>
@@ -118,7 +181,7 @@ function Landing() {
               href="https://github.com/vivekstackk/feature-flag-platform"
               target="_blank"
               rel="noreferrer"
-              className="text-[13px] text-[#8A8E97] transition-colors hover:text-white"
+              className="fw-nav-link text-[13px] text-[#8A8E97]"
             >
               GitHub
             </a>
@@ -128,7 +191,7 @@ function Landing() {
 
           <Link
             to="/dashboard"
-            className="group flex items-center gap-2 rounded-full bg-[#3F7FF5] px-5 py-2.5 text-[13px] font-semibold text-white transition-all duration-200 hover:bg-[#4B89FF] active:scale-[0.98]"
+            className="group flex items-center gap-2 rounded-full bg-[#3F7FF5] px-5 py-2.5 text-[13px] font-semibold text-white fw-dashboard-button"
           >
             Open dashboard
 
@@ -145,12 +208,12 @@ function Landing() {
             HERO
         ========================================================= */}
 
-        <section className="relative min-h-[calc(100vh-72px)] overflow-hidden">
+        <section ref={heroRef} className="relative min-h-[calc(100vh-72px)] overflow-hidden fw-hero">
 
           {/* Atmospheric blue field */}
 
           <div
-            className="pointer-events-none absolute left-[34%] top-[-8%] h-[780px] w-[900px] opacity-80"
+            className="pointer-events-none absolute left-[34%] top-[-8%] h-[780px] w-[900px] opacity-80 fw-glow"
             style={{
               background:
                 'radial-gradient(ellipse at center, rgba(46,77,205,0.42) 0%, rgba(35,58,170,0.24) 30%, rgba(16,25,74,0.10) 55%, transparent 73%)',
@@ -161,7 +224,7 @@ function Landing() {
           {/* Secondary blue haze */}
 
           <div
-            className="pointer-events-none absolute right-[-12%] top-[30%] h-[520px] w-[650px] opacity-30"
+            className="pointer-events-none absolute right-[-12%] top-[30%] h-[520px] w-[650px] opacity-30 fw-glow-secondary"
             style={{
               background:
                 'radial-gradient(circle, rgba(63,127,245,0.28), transparent 68%)',
@@ -173,7 +236,7 @@ function Landing() {
 
           <div className="pointer-events-none absolute inset-0 opacity-[0.035]">
             <div
-              className="h-full w-full"
+              className="h-full w-full fw-grid"
               style={{
                 backgroundImage:
                   'linear-gradient(to right, rgba(255,255,255,0.8) 1px, transparent 1px)',
@@ -188,7 +251,7 @@ function Landing() {
 
               {/* Small positioning label */}
 
-              <div className="mb-8 flex items-center gap-3">
+              <div className="mb-8 flex items-center gap-3 fw-eyebrow">
                 <span className="h-[6px] w-[6px] rounded-full bg-[#45D49A]" />
 
                 <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#858993]">
@@ -198,7 +261,7 @@ function Landing() {
 
               {/* Hero typography */}
 
-              <h1 className="max-w-[1180px] text-[clamp(4rem,9.3vw,9rem)] font-medium leading-[0.88] tracking-[-0.075em]">
+              <h1 className="max-w-[1180px] fw-title text-[clamp(4rem,9.3vw,9rem)] font-medium leading-[0.88] tracking-[-0.075em]">
 
                 <span className="block">
                   Ship features
@@ -212,7 +275,7 @@ function Landing() {
 
               {/* Description */}
 
-              <div className="mt-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="mt-10 flex flex-col gap-8 fw-description lg:flex-row lg:items-end lg:justify-between">
 
                 <p className="max-w-[590px] text-[17px] leading-[1.65] tracking-[-0.015em] text-[#8D919A] sm:text-[19px]">
                   Feature flags for teams that want control over
@@ -220,7 +283,7 @@ function Landing() {
                   handing their application to another platform.
                 </p>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 fw-actions">
 
                   <Link
                     to="/dashboard"
@@ -245,7 +308,7 @@ function Landing() {
 
               {/* Scroll marker */}
 
-              <div className="mt-20 flex items-center gap-3 text-[9px] uppercase tracking-[0.18em] text-[#555A64] lg:mt-24">
+              <div className="mt-20 flex items-center gap-3 fw-scroll text-[9px] uppercase tracking-[0.18em] text-[#555A64] lg:mt-24">
                 <span className="h-px w-8 bg-[#34373E]" />
                 Scroll to explore
               </div>
@@ -259,7 +322,7 @@ function Landing() {
 
         <section
           id="product"
-          className="border-t border-white/[0.07] bg-[#0B0C0F]"
+          className="fw-reveal border-t border-white/[0.07] bg-[#0B0C0F]"
         >
           <div className="mx-auto max-w-[1380px] px-6 py-28 sm:px-8 lg:px-10 lg:py-36">
 
@@ -338,11 +401,11 @@ function Landing() {
 
         <section
           id="how-it-works"
-          className="overflow-hidden bg-[#0B0C0F] pb-28 sm:pb-36"
+          className="fw-reveal overflow-hidden bg-[#0B0C0F] pb-28 sm:pb-36"
         >
           <div className="mx-auto max-w-[1380px] px-6 sm:px-8 lg:px-10">
 
-            <div className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#111318] shadow-[0_40px_120px_rgba(0,0,0,0.4)]">
+            <div className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#111318] shadow-[0_40px_120px_rgba(0,0,0,0.4)] fw-product-card">
 
               {/* Glow */}
 
@@ -511,7 +574,7 @@ function Landing() {
 
         <section
           id="developers"
-          className="border-t border-white/[0.07] bg-[#08090B]"
+          className="fw-reveal border-t border-white/[0.07] bg-[#08090B]"
         >
           <div className="mx-auto max-w-[1380px] px-6 py-28 sm:px-8 lg:px-10 lg:py-36">
 
@@ -576,7 +639,7 @@ function Landing() {
             DEVELOPER SECTION
         ========================================================= */}
 
-        <section className="border-t border-white/[0.07] bg-[#0B0C0F]">
+        <section className="fw-reveal border-t border-white/[0.07] bg-[#0B0C0F]">
 
           <div className="mx-auto grid max-w-[1380px] gap-16 px-6 py-28 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-10 lg:py-36">
 
