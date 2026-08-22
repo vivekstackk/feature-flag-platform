@@ -8,7 +8,7 @@ interface FeatureFlag {
   key: string;
   description?: string;
   enabled: boolean;
-  rolloutPercentage?: number;
+  rollout: { percentage: number; serveValue: boolean } | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -122,6 +122,38 @@ function App() {
     setNewKey('');
     setNewDescription('');
     setShowModal(true);
+  }
+
+  async function handleToggle(flag: FeatureFlag) {
+    try {
+      const response = await apiFetch(`/flags/${flag.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !flag.enabled }),
+      });
+
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+      const updated = await response.json();
+      setFlags((prev) =>
+        prev.map((f) => (f.id === updated.id ? updated : f))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle flag');
+    }
+  }
+
+  async function handleDelete(flag: FeatureFlag) {
+    if (!confirm(`Delete flag "${flag.key}"? This cannot be undone.`)) return;
+
+    try {
+      const response = await apiFetch(`/flags/${flag.id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+      setFlags((prev) => prev.filter((f) => f.id !== flag.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete flag');
+    }
   }
 
   return (
@@ -323,85 +355,96 @@ function App() {
 
                     {flags.map((flag) => {
 
-                      const rollout =
-                        typeof flag.rolloutPercentage ===
-                        'number'
-                          ? flag.rolloutPercentage
-                          : null;
+                      const rollout = flag.rollout?.percentage ?? null;
 
                       return (
-
-                        /*
-                         * IMPORTANT:
-                         * This is now a Link instead of a div.
-                         * Clicking anywhere on the flag opens
-                         * /flags/:id.
-                         */
-                        <Link
+                        <div
                           key={flag.id}
-                          to={`/flags/${flag.id}`}
-                          className="group block rounded-2xl border border-border bg-surface/55 px-7 py-7 transition-all duration-200 hover:border-primary/40 hover:bg-surface hover:shadow-[0_0_35px_rgba(59,130,246,0.07)]"
+                          className="group rounded-2xl border border-border bg-surface/55 px-7 py-6 transition-all duration-200 hover:border-border hover:bg-surface"
                         >
 
-                          <div className="grid grid-cols-1 items-center gap-7 md:grid-cols-[1.5fr_0.8fr_100px]">
+                          <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[1.2fr_auto_0.5fr_0.6fr_auto]">
 
-                            {/* FLAG INFO */}
+                            {/* FLAG INFO — only name links to detail */}
                             <div className="min-w-0">
-
-                              <div className="truncate font-mono text-[17px] font-semibold text-text transition-colors group-hover:text-primary">
+                              <Link
+                                to={`/flags/${flag.id}`}
+                                className="truncate font-mono text-[17px] font-semibold text-text transition-colors hover:text-primary"
+                              >
                                 {flag.key}
-                              </div>
+                              </Link>
 
-                              <div className="mt-2 text-[15px] leading-6 text-text-dim">
-                                {flag.description ||
-                                  'No description provided'}
+                              <div className="mt-1.5 text-[14px] leading-6 text-text-dim">
+                                {flag.description || 'No description provided'}
                               </div>
-
                             </div>
 
-                            {/* STATUS */}
-                            <div className="flex items-center gap-2.5">
-
-                              <span
-                                className={`h-2.5 w-2.5 rounded-full ${
-                                  flag.enabled
-                                    ? 'bg-success shadow-[0_0_12px_rgba(52,211,153,0.5)]'
-                                    : 'bg-text-dim/60'
-                                }`}
-                              />
-
-                              <span
-                                className={`text-[15px] font-medium ${
-                                  flag.enabled
-                                    ? 'text-success'
-                                    : 'text-text-dim'
+                            {/* TOGGLE */}
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => handleToggle(flag)}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ${
+                                  flag.enabled ? 'bg-success' : 'bg-surface-high'
                                 }`}
                               >
-                                {flag.enabled
-                                  ? 'Enabled'
-                                  : 'Disabled'}
-                              </span>
+                                <span
+                                  className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                                    flag.enabled ? 'translate-x-[22px]' : 'translate-x-[3px]'
+                                  }`}
+                                />
+                              </button>
 
+                              <span
+                                className={`text-[13px] font-medium ${
+                                  flag.enabled ? 'text-success' : 'text-text-dim'
+                                }`}
+                              >
+                                {flag.enabled ? 'Enabled' : 'Disabled'}
+                              </span>
                             </div>
 
                             {/* ROLLOUT */}
-                            <div className="flex items-center justify-end gap-3">
-
-                              <span className="font-mono text-[15px] text-text-dim">
-                                {rollout !== null
-                                  ? `${rollout}%`
-                                  : '—'}
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-text-dim">
+                                Rollout
                               </span>
-
-                              <span className="text-[17px] text-text-dim transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary">
-                                →
+                              <span className="font-mono text-[14px] text-text">
+                                {rollout !== null ? `${rollout}%` : '—'}
                               </span>
+                            </div>
 
+                            {/* UPDATED */}
+                            <div className="text-[13px] text-text-dim">
+                              {flag.updatedAt
+                                ? new Date(flag.updatedAt).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : '—'}
+                            </div>
+
+                            {/* ACTIONS */}
+                            <div className="flex items-center gap-3">
+                              <Link
+                                to={`/flags/${flag.id}`}
+                                className="rounded-lg border border-border px-3 py-1.5 text-[12px] text-text-dim transition-colors hover:border-primary hover:text-primary"
+                              >
+                                Edit →
+                              </Link>
+
+                              <button
+                                onClick={() => handleDelete(flag)}
+                                className="rounded-lg border border-border px-3 py-1.5 text-[12px] text-text-dim transition-colors hover:border-danger hover:text-danger"
+                              >
+                                Delete
+                              </button>
                             </div>
 
                           </div>
 
-                        </Link>
+                        </div>
                       );
                     })}
 
